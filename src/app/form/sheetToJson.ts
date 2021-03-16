@@ -194,10 +194,9 @@ const createFormItemObject = (
         );
       }else if(type === "surveyJs:matrix.row"){
         const item = itemObjects[itemObjects.length - 1] as unknown as SurveyJsMatrixItemObject;
-        const [text, value] = [row[1] as string, (row[2] as string || row[1] as string)];
-        item.rows.push(
-          {text, value}
-        );
+        const text = row[1] as string;
+        const value = `${item.name} [${(row[2] as string || row[1] as string)}]`;
+        item.rows.push({text:text, value:value});
         item.cells[value] = {};
       }else if(type === "surveyJs:matrix.cell"){
         const item = itemObjects[itemObjects.length - 1] as unknown as SurveyJsMatrixItemObject;

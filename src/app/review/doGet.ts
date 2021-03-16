@@ -1,6 +1,6 @@
 import {getFormSrc} from '../form/getFormSrc';
-import {formSrcToSurveySrc} from '../reviewConfig/formSrcToSurveySrc';
-import {readConfigFromSheet, REVIEW_BINDING_ROW_START} from '../reviewConfig/reviewConfig';
+import {jsonToSurveyJs} from '../form/jsonToSurveyJs';
+import {getReviewConfigFromSheet, REVIEW_BINDING_ROW_START} from '../reviewConfig/reviewConfig';
 import {getSheetByUrl} from '../sheetUtil';
 
 type Config = {[key:string]: string|number|boolean|null}
@@ -10,7 +10,7 @@ const adminUserEmailAddress = 'hiroya@cuc.global';
 interface ReviewArticle{
 }
 
-interface Stats{
+interface Summary{
 }
 
 interface ReviewUser{
@@ -42,7 +42,7 @@ export function doGet(ev: any) {
   return template.evaluate();
 }
 
-function queryReviews(sheet: GoogleAppsScript.Spreadsheet.Sheet, userEmailAddress: string, queryColumn: number) : {reviewer:ReviewUser, reviewee:ReviewUser}[]{
+function queryReviewRequests(sheet: GoogleAppsScript.Spreadsheet.Sheet, userEmailAddress: string, queryColumn: number) : {reviewer:ReviewUser, reviewee:ReviewUser}[]{
   const textFinders = sheet.createTextFinder(userEmailAddress).findAll();
   const ranges = textFinders.filter(textFinder => textFinder.getColumn() == queryColumn && textFinder.getRow() >= REVIEW_BINDING_ROW_START)
   const reviews = ranges.map(range => sheet.getRange(range.getRow(), 1, 1, 10).getValues()[0]).map(row => ({
@@ -114,7 +114,7 @@ function getReviewArticles(userEmailAddress: string): ReviewArticle[] {
   return []; // FIXME
 }
 
-function getStats(config: Config): any {
+function geSummary(config: Config): any {
   return null; // FIXME
 }
 
@@ -125,28 +125,28 @@ export function initializeReviewPage(gid: string, effectiveUserEmailAddress: str
   const activeUserEmailAddress = Session.getActiveUser().getEmail();
   const isAdmin = (activeUserEmailAddress === adminUserEmailAddress);
   effectiveUserEmailAddress = isAdmin? (effectiveUserEmailAddress || activeUserEmailAddress) : activeUserEmailAddress;
-  const sheet = getReviewConfigSheet(gid);
-  const config = readConfigFromSheet (sheet);
+  const configSheet = getReviewConfigSheet(gid);
+  const config = getReviewConfigFromSheet (configSheet);
   const formSrc = getFormSrcByConfig(config);
-  const reviews = queryReviews(sheet, effectiveUserEmailAddress, 2);
+  const reviewRequests = queryReviewRequests(configSheet, effectiveUserEmailAddress, 2);
 
-  const userEmailAddressList = [effectiveUserEmailAddress, ...reviews.map(review=>review.reviewee.emailAddress)];
+  const userEmailAddressList = [effectiveUserEmailAddress, ...reviewRequests.map(review=>review.reviewee.emailAddress)];
   const submissionMap = getStudentSubmissionMap(config, userEmailAddressList);
-  const reports = getReviewArticles(effectiveUserEmailAddress);
-  const stats: Stats = getStats(config);
+  const reviewArticles = getReviewArticles(effectiveUserEmailAddress);
+  const summary: Summary = geSummary(config);
 
-  const reviewers = Array.from(getReviewers(sheet).keys()).sort();
+  const reviewers = Array.from(getReviewers(configSheet).keys()).sort();
 
   return {
     availableModes: ['submission', 'review', 'report', 'stat'],
     gid,
     effectiveUserEmailAddress: effectiveUserEmailAddress,
     config,
-    surveySrc: formSrcToSurveySrc(formSrc),
+    surveyJs: jsonToSurveyJs(formSrc),
     submissionMap,
-    reviews,
-    reports,
-    stats,
+    reviewRequests,
+    reviewArticles,
+    summary,
     admin: (isAdmin)? {
       //reviewers: ['b8c0045@cuc.global']
       reviewers

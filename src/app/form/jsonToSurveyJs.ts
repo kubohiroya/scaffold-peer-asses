@@ -5,9 +5,9 @@ import {
   ParagraphTextItemObject,
   SectionHeaderItemObject,
   TextItemObject
-} from '../form/types';
+} from './types';
 
-export function formSrcToSurveySrc(formSrc: FormObject){
+export function jsonToSurveyJs(formSrc: FormObject){
 
   const createPage = (pageNumber: number, options?: any)=>({
     name: "page"+pageNumber,
@@ -15,20 +15,20 @@ export function formSrcToSurveySrc(formSrc: FormObject){
     ...options,
   });
 
-  let itemSerialNum = 1;
+  // let itemSerialNum = 1;
 
   const formSrcItemToSurveyJsItem = (item: any) => {
     if(item.type === "surveyJs:matrix") {
       return {
         ...item,
-        name: `item${itemSerialNum++}`,
+        // name: item.name, // `item${itemSerialNum++}`,
         type: 'matrix'
       };
     }else if(item.type === "checkbox"){
       const itemObject = (item as CheckboxItemObject);
       return {
         type: "checkbox",
-        name: `item${itemSerialNum++}`,
+        name: itemObject.title, // item${itemSerialNum++}`,
         title: itemObject.title,
         tooltip: itemObject.helpText,
         isRequired: itemObject.isRequired,
@@ -42,7 +42,7 @@ export function formSrcToSurveySrc(formSrc: FormObject){
       const itemObject = (item as DateItemObject);
       return {
         "type": "datepicker",
-        name: `item${itemSerialNum++}`,
+        name: itemObject.title, // `item${itemSerialNum++}`,
         title: itemObject.title,
         tooltip: itemObject.helpText,
         "inputType": "date",
@@ -53,7 +53,7 @@ export function formSrcToSurveySrc(formSrc: FormObject){
       const itemObject = (item as DateItemObject);
       return {
         "type": "datepicker",
-        name: `item${itemSerialNum++}`,
+        name: itemObject.title, // `item${itemSerialNum++}`,
         title: itemObject.title,
         tooltip: itemObject.helpText,
         "inputType": "datetime",
@@ -68,7 +68,7 @@ export function formSrcToSurveySrc(formSrc: FormObject){
       const itemObject = (item as GridItemObject);
       return {
         type: "matrix",
-        name: `item${itemSerialNum++}`,
+        name: itemObject.title, // `item${itemSerialNum++}`,
         title: itemObject.title,
         tooltip: itemObject.helpText,
         isRequired: itemObject.isRequired,
@@ -82,7 +82,7 @@ export function formSrcToSurveySrc(formSrc: FormObject){
       const itemObject = (item as ListItemObject);
       return {
         type: "dropdown",
-        name: `item${itemSerialNum++}`,
+        name: itemObject.title, // `item${itemSerialNum++}`,
         title: itemObject.title,
         tooltip: itemObject.helpText,
         isRequired: itemObject.isRequired,
@@ -93,7 +93,7 @@ export function formSrcToSurveySrc(formSrc: FormObject){
       const itemObject = (item as MultipleChoiceItemObject);
       return {
         type: "radiogroup",
-        name: `item${itemSerialNum++}`,
+        name: itemObject.title, // `item${itemSerialNum++}`,
         title: itemObject.title,
         tooltip: itemObject.helpText,
         isRequired: itemObject.isRequired,
@@ -104,7 +104,7 @@ export function formSrcToSurveySrc(formSrc: FormObject){
       const itemObject = (item as ParagraphTextItemObject);
       return {
         type: "comment",
-        name: `item${itemSerialNum++}`,
+        name: itemObject.title, // `item${itemSerialNum++}`,
         title: itemObject.title,
         tooltip: itemObject.helpText,
         isRequired: itemObject.isRequired,
@@ -117,7 +117,7 @@ export function formSrcToSurveySrc(formSrc: FormObject){
       const itemObject = (item as SectionHeaderItemObject);
       return {
         type: 'html',
-        name: `item${itemSerialNum++}`,
+        name: itemObject.title, // `item${itemSerialNum++}`,
         tooltip: itemObject.helpText,
         html: `<h3>${itemObject.title}</h3><h4>${itemObject.helpText}</h4>`
       };
@@ -125,7 +125,7 @@ export function formSrcToSurveySrc(formSrc: FormObject){
       const itemObject = (item as TextItemObject);
       return {
         type: "text",
-        name: `item${itemSerialNum++}`,
+        name: itemObject.title, // `item${itemSerialNum++}`,
         title: itemObject.title,
         tooltip: itemObject.helpText,
         isRequired: itemObject.isRequired,
@@ -152,7 +152,7 @@ export function formSrcToSurveySrc(formSrc: FormObject){
       });
       page.elements.push({
         type: 'html',
-        name: `item${itemSerialNum++}`,
+        name: itemObject.title, // `item${itemSerialNum++}`,
         html: `<p>${itemObject.helpText}</p>`
       })
       pages.push(page);

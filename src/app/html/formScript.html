@@ -42,7 +42,7 @@
         initializing: true,
         data: {
             formSrc: {},
-            surveySrc: {},
+            surveyJs: {},
         },
         survey: null,
       };
@@ -51,7 +51,7 @@
       initializeData: function (initData) {
           this.initializing = false;
           this.data = { ...initData };
-          this.survey = new Survey.Model(this.data.surveySrc);
+          this.survey = new Survey.Model(this.data.surveyJs);
 
           this.survey
               .onAfterRenderQuestion

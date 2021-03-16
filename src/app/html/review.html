@@ -85,7 +85,7 @@
 
                 <v-tab-item style="height: 100%; display: flex; flex-wrap: nowrap; flex-direction: column; justify-content: start">
 
-                    <h4 v-if="! data.reviews || data.reviews.length === 0"
+                    <h4 v-if="! data.reviewRequests || data.reviewRequests.length === 0"
                     >評価を行う必要はありません。</h4>
 
                     <v-container
@@ -101,12 +101,12 @@
                                 >
 
                                     <v-tab
-                                            v-for="review in data.reviews"
-                                            v-bind:key="review.reviewer.hashDigest+' '+review.reviewee.hashDigest"
+                                            v-for="reviewRequest in data.reviewRequests"
+                                            v-bind:key="reviewRequest.reviewer.hashDigest+' '+reviewRequest.reviewee.hashDigest"
                                             　style="text-transform: none"
                                     >
                                         <div
-                                                v-for="(photoUrl, index) in review.reviewee.photoUrl.split('\t')"
+                                                v-for="(photoUrl, index) in reviewRequest.reviewee.photoUrl.split('\t')"
                                                 style="
                             display: flex;
                             justify-direction: row;
@@ -116,20 +116,20 @@
                                         >
                                             <v-avatar size="24" left>
                                                 <img
-                                                        :alt="review.reviewee.fullName.split('\t')[index]"
+                                                        :alt="reviewRequest.reviewee.fullName.split('\t')[index]"
                                                         :src="photoUrl"
                                                 />
                                             </v-avatar>
                                             <div style="margin-left: 5px">
                           <span style="font-size: 100%"
-                          >{{review.reviewee.fullName}}</span
+                          >{{reviewRequest.reviewee.fullName}}</span
                           ><br />
                                                 <span style="font-size: 33%"
-                                                >({{review.reviewee.emailAddress}})</span
+                                                >({{reviewRequest.reviewee.emailAddress}})</span
                                                 >
                                             </div>
                                         </div>
-                                        <v-icon :style="`opacity: ${review.reviewee.done?1:0}`">mdi-check</v-icon>
+                                        <v-icon :style="`opacity: ${reviewRequest.reviewee.done?1:0}`">mdi-check</v-icon>
 
                                     </v-tab>
                                 </v-tabs>
@@ -141,31 +141,31 @@
                                         vertical
                                 >
                                     <v-tab-item
-                                            v-for="(review, reviewIndex) in data.reviews"
-                                            v-bind:key="review.reviewer.index+' '+review.reviewee.index"
+                                            v-for="reviewRequest in data.reviewRequests"
+                                            v-bind:key="reviewRequest.reviewer.index+' '+reviewRequest.reviewee.index"
                                     >
                                         <v-card>
                                             <v-card-title>
                                                 <h3>
                                                     <div
                                                             style="display: flex; justify-content: flex-start;"
-                                                            v-for="(photoUrl, index) in review.reviewee.photoUrl.split('\t')"
+                                                            v-for="(photoUrl, index) in reviewRequest.reviewee.photoUrl.split('\t')"
                                                     >
                                                         <v-avatar>
                                                             <img
-                                                                    :alt="review.reviewee.fullName.split('\t')[index]"
+                                                                    :alt="reviewRequest.reviewee.fullName.split('\t')[index]"
                                                                     :src="photoUrl"
                                                             />
                                                         </v-avatar>
                                                         <div>
-                                                            {{review.reviewee.fullName}}
-                                                            ({{review.reviewee.emailAddress}})
+                                                            {{reviewRequest.reviewee.fullName}}
+                                                            ({{reviewRequest.reviewee.emailAddress}})
                                                         </div>
                                                     </div>
                                                 </h3>
                                             </v-card-title>
                                             <v-card-subtitle>
-                                                [{{review.reviewee.hashDigest}}]
+                                                [{{reviewRequest.reviewee.hashDigest}}]
                                             </v-card-subtitle>
 
 
@@ -173,29 +173,29 @@
 
                                                 <v-card>
                                                     <v-card-title>
-                                                        {{data.submissionMap[review.reviewee.emailAddress].courseWorkTitle}}
+                                                        {{data.submissionMap[reviewRequest.reviewee.emailAddress].courseWorkTitle}}
                                                         <!--{{data.submission.state==="TURNED_IN"?"提出済み":"未提出"}}-->
                                                     </v-card-title>
                                                     <v-card-subtitle>
                                                         <div>
-                                                            「{{data.submissionMap[review.reviewee.emailAddress].courseName}}」における課題
+                                                            「{{data.submissionMap[reviewRequest.reviewee.emailAddress].courseName}}」における課題
                                                         </div>
                                                         <div>
-                                                            作成：{{new Date(data.submissionMap[review.reviewee.emailAddress].createdAt).toLocaleString()}}
+                                                            作成：{{new Date(data.submissionMap[reviewRequest.reviewee.emailAddress].createdAt).toLocaleString()}}
                                                             -
-                                                            更新：{{new Date(data.submissionMap[review.reviewee.emailAddress].updatedAt).toLocaleString()}}
+                                                            更新：{{new Date(data.submissionMap[reviewRequest.reviewee.emailAddress].updatedAt).toLocaleString()}}
                                                         </div>
                                                     </v-card-subtitle>
                                                     <v-card-text>
                                                         <ul>
-                                                            <li>添付ファイル名：{{data.submissionMap[review.reviewee.emailAddress].values[0]}}</li>
-                                                            <li>添付ファイルのURL：<a target="_blank" :href="data.submissionMap[review.reviewee.emailAddress].values[1]">{{data.submissionMap[review.reviewee.emailAddress].values[1]}}</a></li>
+                                                            <li>添付ファイル名：{{data.submissionMap[reviewRequest.reviewee.emailAddress].values[0]}}</li>
+                                                            <li>添付ファイルのURL：<a target="_blank" :href="data.submissionMap[reviewRequest.reviewee.emailAddress].values[1]">{{data.submissionMap[reviewRequest.reviewee.emailAddress].values[1]}}</a></li>
                                                         </ul>
                                                     </v-card-text>
                                                 </v-card>
 
                                                 <div>
-                                                    <survey :survey="review.reviewee.surveyModel"></survey>
+                                                    <survey :survey="reviewRequest.reviewee.surveyModel"></survey>
                                                 </div>
 
                                             </v-card-text>
@@ -210,9 +210,9 @@
                 </v-tab-item>
 
                 <v-tab-item>
-                    <h4 v-if="! data.reports || data.reports.length === 0">表示するデータがありません。</h4>
+                    <h4 v-if="! data.reviewArticles || data.reviewArticles.length === 0">表示するデータがありません。</h4>
                     <div v-else>
-                        <v-card v-for="(report, index) in data.reports" v-bind:key="report.index">
+                        <v-card v-for="(report, index) in data.reviewArticles" v-bind:key="report.index">
                             {{JSON.stringify(report)}}
                         </v-card>
                     </div>
@@ -220,9 +220,9 @@
 
                 <v-tab-item>
 
-                    <h4 v-if="! data.stats">表示するデータがありません。</h4>
+                    <h4 v-if="! data.summary">表示するデータがありません。</h4>
                     <div v-else>
-                        {{JSON.stringify(data.stats)}}
+                        {{ JSON.stringify(data.summary) }}
                     </div>
 
 

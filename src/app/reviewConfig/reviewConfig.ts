@@ -10,7 +10,8 @@ import {getSheetByUrl} from '../sheetUtil';
 import {openURL} from '../openURL';
 import {showPicker} from '../picker/picker';
 import {getFormSrc} from '../form/getFormSrc';
-import {formSrcToSurveySrc} from './formSrcToSurveySrc';
+import {jsonToSurveyJs} from '../form/jsonToSurveyJs';
+import {jsonToFormColumnNames} from '../form/jsonToFormColumnNames';
 import Sheet = GoogleAppsScript.Spreadsheet.Sheet;
 
 
@@ -48,7 +49,6 @@ export interface ReviewConfig {
 export const CONFIG_METADATA_RANGE = "A1:B25";
 export const REVIEW_BINDING_ROW_RANGE_START = "A27:J27";
 export const REVIEW_BINDING_ROW_START = 27;
-const ACTION_URL_ROW_OFFSET_FROM_END = -2;
 
 const FORM_URL_INPUT_BOX_TITLE = "「フォーム」または「フォーム定義シート」のURLを入力してください";
 const FORM_URL_INPUT_BOX_PROMPT = "★「フォーム」の場合：「docs.google.com/form」で始まるもの<br/>" +
@@ -206,7 +206,7 @@ export function startReviewConfig() {
   SpreadsheetApp.getUi().showSidebar(html.evaluate().setTitle(title))
 }
 
-export function readConfigFromSheet(sheet: Sheet) {
+export function getReviewConfigFromSheet(sheet: Sheet) {
   const ret: { [key: string]: string | number | boolean | null } = {};
   const values = sheet.getRange(CONFIG_METADATA_RANGE).getValues() as Array<Array<string | number | boolean | null>>;
   values.forEach(value => {
@@ -223,7 +223,7 @@ export function initializeReviewConfig() {
   const configValuesFromSpreadsheet = (() => {
     if (reviewSheetName) {
       const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(reviewSheetName);
-      return readConfigFromSheet(sheet);
+      return getReviewConfigFromSheet(sheet);
     } else {
       return {
         nonce: createNonce()
@@ -327,20 +327,9 @@ function selectConfigSheet(config: ReviewConfig): Sheet {
   }
 }
 
-const getFormColumnNames = (config: ReviewConfig) => {
-  const columnNames = new Array<string>();
-  const formSrc = getFormSrc(config.formSrcType, config.formSrcUrl);
-  const surveySrc = formSrcToSurveySrc(formSrc);
-  surveySrc.pages.forEach(page=>{
-    page.elements.forEach((element: {name: string})=>{
-      columnNames.push(element.name);
-    })
-  })
-  return columnNames;
-}
-
 const initializeResultSheet = (config: ReviewConfig) => {
-  const columnNames = getFormColumnNames(config);
+  const formSrc = getFormSrc(config.formSrcType, config.formSrcUrl);
+  const columnNames = jsonToFormColumnNames(formSrc);
 
   let resultSheet = config.resultUrl && config.resultUrl.length > 0 && getSheetByUrl(config.resultUrl);
   if(! resultSheet){
@@ -348,14 +337,14 @@ const initializeResultSheet = (config: ReviewConfig) => {
     const resultSheetName = "result:"+config.courseName+" "+config.courseWorkTitle;
     resultSheet = ss.getSheetByName(resultSheetName);
     if(! resultSheet){
-      resultSheet = ss.insertSheet(resultSheetName).setTabColor("red");
+      resultSheet = ss.insertSheet(resultSheetName).setTabColor("magenta");
       resultSheet.appendRow([
-        "更新日時",
-        "評価者名",
+        "タイムスタンプ",
         "評価者メールアドレス",
+        "評価者名",
         "評価者ハッシュ値",
-        "被評価者名",
         "被評価者メールアドレス",
+        "被評価者名",
         "被評価者ハッシュ値",
         ...columnNames,
       ]);
@@ -371,9 +360,8 @@ export function submitReviewConfig(config: ReviewConfig) {
   const configValues = configJsonToValues(config);
   const sheet = selectConfigSheet(config);
   const gid = sheet.getSheetId().toString();
-  const actionUrl = configValues[configValues.length + ACTION_URL_ROW_OFFSET_FROM_END][1] = process.env.DEPLOYED_URL + "?gid=" + gid;
-
-  sheet.getRange(CONFIG_METADATA_RANGE).setValues(configValues);
+  const actionUrl = process.env.DEPLOYED_URL + "?gid=" + gid;
+  submitPropertyValue(config, 'actionUrl', actionUrl);
 
   const reviewers: Array<Reviewer> = createReviewers(config);
   const startRow = configValues.length + 1;
@@ -422,9 +410,9 @@ export function openResultSheet(resultUrl: string | undefined) {
 
 export function initializeFormPreviewPage(gid: string) {
   const formSrc = getFormSrc("spreadsheet", SpreadsheetApp.getActiveSpreadsheet().getUrl() + "?gid=" + gid);
-  const surveySrc = formSrcToSurveySrc(formSrc);
+  const surveyJs = jsonToSurveyJs(formSrc);
   return {
-    surveySrc,
+    surveyJs,
     gid,
   }
 }
