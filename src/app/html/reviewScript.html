@@ -1,0 +1,68 @@
+<script src="https://cdn.jsdelivr.net/npm/vue@2.6.12/dist/vue.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/vuetify@2.x/dist/vuetify.js"></script>
+<link href="https://fonts.googleapis.com/css?family=Roboto:100,300,400,500,700,900" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/@mdi/font@4.x/css/materialdesignicons.min.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/vuetify@2.x/dist/vuetify.min.css" rel="stylesheet">
+<script src="https://unpkg.com/survey-vue"></script>
+<link href="https://unpkg.com/survey-vue/survey.min.css" type="text/css" rel="stylesheet"/>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, minimal-ui">
+
+<script>
+    const app = new Vue({
+        el: '#app',
+        vuetify: new Vuetify(),
+        data: function() {
+            return {
+                modeTab: [],
+                revieweeTab: null,
+                initializing: true,
+                data: {
+                    availableModes: [],
+                    gid: '',
+                    effectiveUserEmailAddress: '',
+                    admin: {
+                        reviewers: []
+                    },
+                    config: {},
+                    surveySrc: {},
+
+                    submissionMap: null,
+                    reviews: [],
+                    reports: [],
+                    stats: null,
+                },
+            };
+        },
+        methods: {
+            initializeData: function(initData){
+                this.initializing = false;
+                this.data = {...initData};
+                const reviewerEmailAddress = this.data.effectiveUserEmailAddress;
+                const surveySrc = this.data.surveySrc;
+                this.data.reviews.map(review=>review.reviewee).forEach(function(reviewee){
+                    const revieweeEmailAddress = reviewee.emailAddress;
+                    const surveyModel = new Survey.Model(surveySrc);
+                    surveyModel.onComplete.add(function(sender){
+                        console.log(reviewerEmailAddress, revieweeEmailAddress, JSON.stringify(sender.data));
+                        Vue.set(reviewee, "done", true);
+                    } )
+                    Vue.set(reviewee, "surveyModel", surveyModel);
+                });
+            },
+            switchUser: function(){
+                this.initializing = true;
+                google.script.run.withSuccessHandler(this.initializeData).initializeReviewPage(gid, this.data.effectiveUserEmailAddress);
+            },
+            /*
+            getReviewStatus: function(reviewerEmailAddress, revieweeEmailAddress){
+                return this.reviewStatus[`${reviewerEmailAddress} ${revieweeEmailAddress}`];
+            }*/
+        },
+        created: function(){
+            const userEmailAddress = null;
+            document.getElementById("app").style.display = 'block';
+            google.script.run.withSuccessHandler(this.initializeData).initializeReviewPage(gid, userEmailAddress);
+        }
+    });
+
+</script>

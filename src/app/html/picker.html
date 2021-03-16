@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8" />
+    <base target="_top" />
+    <?!= HtmlService.createHtmlOutputFromFile('pickerStyle').getContent(); ?>
+    <!--link rel="stylesheet" href="https://ssl.gstatic.com/docs/script/css/add-ons.css"-->
+</head>
+<body>
+<div id="app">
+    <p style="text-align: center; margin-top: 50px" >{{message}}</p>
+    <div
+            v-if="initializing"
+            class="text-center"
+            style="text-align: center; margin-top: 50px; margin-left: auto; margin-right: auto; width: 100%"
+    >
+        <v-progress-circular
+                indeterminate
+                color="primary"
+        ></v-progress-circular>
+    </div>
+</div>
+<script type="text/javascript">
+    const apiKey = "<?= apiKey ?>";
+    const mimeType = "<?= mimeType ?>";
+    const command = "<?= command ?>";
+</script>
+<?!= HtmlService.createHtmlOutputFromFile('pickerScript').getContent(); ?>
+<script type="text/javascript" src="https://apis.google.com/js/api.js?onload=loadPicker"></script>
+</body>
+</html>

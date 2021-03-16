@@ -17,7 +17,7 @@ import {
   ListItemObject,
   MultipleChoiceItemObject,
   QItemObject,
-  QuizFeedbackObject,
+  QuizFeedbackObject, SurveyJsMatrixItemObject,
 } from "./types";
 
 const COL_INDEX = {
@@ -112,7 +112,7 @@ const COL_INDEX = {
 
 //const EMPTY_STRING = "";
 
-const types: Record<string, string> = {
+const METADATA_TYPES: Record<string, string> = {
   quiz: "boolean",
   allowResponseEdits: "boolean",
   collectEmail: "boolean",
@@ -149,7 +149,7 @@ const createFormMetadata = (
       const value = row[1];
       if (key === "editors" && typeof value === "string") {
         metadataSrc[key] = value.split(",");
-      } else if (typeof value === types[key]) {
+      } else if (typeof value === METADATA_TYPES[key]) {
         metadataSrc[key] = value;
       }
     }
@@ -161,27 +161,52 @@ function createFormItemObjects(
   values: Array<Array<string | number | boolean | Date | null>>
 ): Array<ItemObject> {
   const itemObjects = Array<ItemObject>();
-  for (let index = 0; index < values.length; ) {
-    const command = values[index][COL_INDEX.TYPE] as string;
+  values.forEach((row: Array<string|number|boolean|Date|null>) => {
+    const command = row[COL_INDEX.TYPE] as string;
     if (command.charAt(0) === "#" || command === "comment") {
-      continue;
+      return;
     }
-    index += createFormItemObject(values, index, itemObjects);
-  }
+    createFormItemObject(row, itemObjects);
+  });
   return itemObjects;
 }
 
 const createFormItemObject = (
-  values: Array<Array<string | number | boolean | Date | null>>,
-  base: number,
+  row: Array<string | number | boolean | Date | null>,
   itemObjects: Array<ItemObject>
-): number => {
-  let index = base;
-  for (; index < values.length; index++) {
-    const type = values[index][COL_INDEX.TYPE] as string;
-    if (type.charAt(0) === "#" || type === "comment") {
-      continue;
-    } else if (itemObjects.length > 0) {
+): void => {
+  const type = row[COL_INDEX.TYPE] as string;
+  if(type.startsWith("surveyJs:")){
+      if(type === "surveyJs:matrix"){
+        const itemObject = {
+          type: type,
+          name: row[1] as string,
+          columns: new Array<string>(),
+          rows: new Array<{value:string, text:string}>(),
+          cells: {} as {[rowName: string]: {[columnName: string]: string}},
+          _cellIndex: 0
+        };
+        itemObjects.push({...itemObject, title: itemObject.name, helpText: ''});
+      }else if(type === "surveyJs:matrix.column"){
+        const item = itemObjects[itemObjects.length - 1] as unknown as SurveyJsMatrixItemObject;
+        item.columns.push(
+          row[1] as string
+        );
+      }else if(type === "surveyJs:matrix.row"){
+        const item = itemObjects[itemObjects.length - 1] as unknown as SurveyJsMatrixItemObject;
+        const [text, value] = [row[1] as string, (row[2] as string || row[1] as string)];
+        item.rows.push(
+          {text, value}
+        );
+        item.cells[value] = {};
+      }else if(type === "surveyJs:matrix.cell"){
+        const item = itemObjects[itemObjects.length - 1] as unknown as SurveyJsMatrixItemObject;
+        const matrixRowIndex = Math.floor(item._cellIndex / item.columns.length);
+        const matrixColumnIndex = item._cellIndex % item.columns.length;
+        item.cells[item.rows[matrixRowIndex].value][item.columns[matrixColumnIndex]] = row[1] as string;
+        item._cellIndex++;
+      }
+    } else {
       const isQItem =
         type === "multipleChoice" ||
         type === "checkbox" ||
@@ -216,15 +241,15 @@ const createFormItemObject = (
       if (isQItem || isOtherItem) {
         const itemObject = {
           type: type,
-          title: values[index][COL_INDEX.ITEM.TITLE],
-          helpText: values[index][COL_INDEX.ITEM.HELP_TEXT],
+          title: row[COL_INDEX.ITEM.TITLE],
+          helpText: row[COL_INDEX.ITEM.HELP_TEXT],
         } as ItemObject;
 
         if (isOtherItem) {
           if (type === "image") {
-            const url = values[index][COL_INDEX.ITEM.IMAGE.URL];
-            const width = values[index][COL_INDEX.ITEM.IMAGE.WIDTH];
-            const alignment = values[index][COL_INDEX.ITEM.IMAGE.ALIGNMENT];
+            const url = row[COL_INDEX.ITEM.IMAGE.URL];
+            const width = row[COL_INDEX.ITEM.IMAGE.WIDTH];
+            const alignment = row[COL_INDEX.ITEM.IMAGE.ALIGNMENT];
             const imageItemObject = {
               url,
               width,
@@ -233,9 +258,9 @@ const createFormItemObject = (
             };
             itemObjects.push(imageItemObject);
           } else if (type === "video") {
-            const url = values[index][COL_INDEX.ITEM.VIDEO.URL];
-            const width = values[index][COL_INDEX.ITEM.VIDEO.WIDTH];
-            const alignment = values[index][COL_INDEX.ITEM.IMAGE.ALIGNMENT];
+            const url = row[COL_INDEX.ITEM.VIDEO.URL];
+            const width = row[COL_INDEX.ITEM.VIDEO.WIDTH];
+            const alignment = row[COL_INDEX.ITEM.IMAGE.ALIGNMENT];
             const videoItemObject = {
               url,
               width,
@@ -246,10 +271,10 @@ const createFormItemObject = (
           } else if (type === "sectionHeader") {
             itemObjects.push({ ...itemObject });
           } else if (type === "pageBreak") {
-            const gotoPageTitle = values[index][
+            const gotoPageTitle = row[
               COL_INDEX.ITEM.PAGE_BREAK.GO_TO_PAGE_TITLE
             ] as string | null;
-            const pageNavigationType = values[index][
+            const pageNavigationType = row[
               COL_INDEX.ITEM.PAGE_BREAK.PAGE_NAVIGATION_TYPE
             ] as string | null;
             if (gotoPageTitle) {
@@ -264,12 +289,12 @@ const createFormItemObject = (
           }
         } else if (isQItem) {
           const qItemObject = itemObject as QItemObject;
-          qItemObject.isRequired = values[index][
+          qItemObject.isRequired = row[
             COL_INDEX.ITEM.Q.REQUIRED
           ] as boolean;
           if (type === "multipleChoice") {
-            const showOther = values[index][COL_INDEX.ITEM.Q.MULTIPLE_CHOICE.SHOW_OTHER];
-            const points = values[index][COL_INDEX.ITEM.Q.MULTIPLE_CHOICE.POINTS];
+            const showOther = row[COL_INDEX.ITEM.Q.MULTIPLE_CHOICE.SHOW_OTHER];
+            const points = row[COL_INDEX.ITEM.Q.MULTIPLE_CHOICE.POINTS];
             const multipleChoiceItemObject = {
               showOther,
               points,
@@ -279,8 +304,8 @@ const createFormItemObject = (
             itemObjects.push(multipleChoiceItemObject);
           } else if (type === "checkbox") {
             const showOther =
-              values[index][COL_INDEX.ITEM.Q.CHECKBOX.SHOW_OTHER];
-            const points = values[index][COL_INDEX.ITEM.Q.CHECKBOX.POINTS];
+              row[COL_INDEX.ITEM.Q.CHECKBOX.SHOW_OTHER];
+            const points = row[COL_INDEX.ITEM.Q.CHECKBOX.POINTS];
             const checkboxItemObject = {
               showOther,
               points,
@@ -289,7 +314,7 @@ const createFormItemObject = (
             };
             itemObjects.push(checkboxItemObject);
           } else if (type === "list") {
-            const points = values[index][COL_INDEX.ITEM.Q.LIST.POINTS];
+            const points = row[COL_INDEX.ITEM.Q.LIST.POINTS];
             const listItemObject = {
               points,
               choices: new Array<ChoiceObject>(),
@@ -298,18 +323,18 @@ const createFormItemObject = (
             itemObjects.push(listItemObject);
           } else if (type === "date") {
             const includesYear =
-              values[index][COL_INDEX.ITEM.Q.DATE.INCLUDES_YEAR];
-            const points = values[index][COL_INDEX.ITEM.Q.DATE.POINTS];
+              row[COL_INDEX.ITEM.Q.DATE.INCLUDES_YEAR];
+            const points = row[COL_INDEX.ITEM.Q.DATE.POINTS];
             const dateItemObject = { includesYear, points, ...qItemObject };
             itemObjects.push(dateItemObject);
           } else if (type === "time") {
-            const points = values[index][COL_INDEX.ITEM.Q.TIME.POINTS];
+            const points = row[COL_INDEX.ITEM.Q.TIME.POINTS];
             const dateItemObject = { points, ...qItemObject };
             itemObjects.push(dateItemObject);
           } else if (type === "dateTime") {
             const includesYear =
-              values[index][COL_INDEX.ITEM.Q.DATE_TIME.INCLUDES_YEAR];
-            const points = values[index][COL_INDEX.ITEM.Q.DATE_TIME.POINTS];
+              row[COL_INDEX.ITEM.Q.DATE_TIME.INCLUDES_YEAR];
+            const points = row[COL_INDEX.ITEM.Q.DATE_TIME.POINTS];
             const dateTimeItemObject = { includesYear, points, ...qItemObject };
             itemObjects.push(dateTimeItemObject);
           } else if (type === "grid") {
@@ -327,13 +352,13 @@ const createFormItemObject = (
             };
             itemObjects.push(checkboxGridItemObject);
           } else if (type === "scale") {
-            const leftLabel = values[index][COL_INDEX.ITEM.Q.SCALE.LEFT_LABEL];
+            const leftLabel = row[COL_INDEX.ITEM.Q.SCALE.LEFT_LABEL];
             const lowerBound =
-              values[index][COL_INDEX.ITEM.Q.SCALE.LOWER_BOUND];
+              row[COL_INDEX.ITEM.Q.SCALE.LOWER_BOUND];
             const rightLabel =
-              values[index][COL_INDEX.ITEM.Q.SCALE.RIGHT_LABEL];
+              row[COL_INDEX.ITEM.Q.SCALE.RIGHT_LABEL];
             const upperBound =
-              values[index][COL_INDEX.ITEM.Q.SCALE.UPPER_BOUND];
+              row[COL_INDEX.ITEM.Q.SCALE.UPPER_BOUND];
             if (leftLabel && lowerBound && rightLabel && upperBound) {
               const scaleItemObject = {
                 leftLabel,
@@ -345,21 +370,24 @@ const createFormItemObject = (
               itemObjects.push(scaleItemObject);
             }
           } else if (type === "text") {
-            const points = values[index][COL_INDEX.ITEM.Q.TEXT.POINTS];
+            const points = row[COL_INDEX.ITEM.Q.TEXT.POINTS];
             const textItemObject = { points, ...qItemObject };
             itemObjects.push(textItemObject);
           } else if (type === "paragraphText") {
             const points =
-              values[index][COL_INDEX.ITEM.Q.PARAGRAPH_TEXT.POINTS];
+              row[COL_INDEX.ITEM.Q.PARAGRAPH_TEXT.POINTS];
             const paragraphTextItemObject = { points, ...qItemObject };
             itemObjects.push(paragraphTextItemObject);
           } else {
             throw new Error();
           }
-        } else if (isFeedback) {
+        } else {
+          throw new Error();
+        }
+      } else if (isFeedback) {
           const feedbackObject: QuizFeedbackObject = {
             type: type,
-            text: values[index][COL_INDEX.FEEDBACK.TEXT] as string,
+            text: row[COL_INDEX.FEEDBACK.TEXT] as string,
             linkUrls: [],
           };
           if (type === "generalFeedback") {
@@ -379,114 +407,117 @@ const createFormItemObject = (
             quizItem.feedbackForIncorrect = feedbackObject;
           }
         } else if (isFeedbackLink) {
-          const url = values[index][COL_INDEX.FEEDBACK.URL] as string;
-          if (type === "generalFeedback.link") {
-            const quizItem = (itemObjects[
-              itemObjects.length - 1
-            ] as unknown) as GeneralFeedbackObject;
-            if (quizItem.generalFeedback) {
-              quizItem.generalFeedback.linkUrls.push(url);
-            } else {
-              throw new Error();
-            }
-          } else if (type === "correctnessFeedback.link") {
-            const quizItem = (itemObjects[
-              itemObjects.length - 1
-            ] as unknown) as CorrectnessFeedbackObject;
-            if (quizItem.feedbackForCorrect) {
-              quizItem.feedbackForCorrect.linkUrls.push(url);
-            } else {
-              throw new Error();
-            }
-          } else if (type === "incorrectnessFeedback.link") {
-            const quizItem = (itemObjects[
-              itemObjects.length - 1
-            ] as unknown) as CorrectnessFeedbackObject;
-            if (quizItem.feedbackForIncorrect) {
-              quizItem.feedbackForIncorrect.linkUrls.push(url);
-            } else {
-              throw new Error();
-            }
-          }
-        } else if (isChoice) {
-          const value = values[index][COL_INDEX.CHOICE.VALUE] as string;
-          const choice =
-            values[index][COL_INDEX.CHOICE.IS_CORRECT_ANSWER] === null
-              ? ({
-                  value,
-                } as ChoiceObject)
-              : ({
-                  value,
-                  isCorrectAnswer:
-                    values[index][COL_INDEX.CHOICE.IS_CORRECT_ANSWER],
-                } as ChoiceObject);
-          if (type === "multipleChoice.choice") {
-            const quizItem = (itemObjects[
-              itemObjects.length - 1
-            ] as unknown) as MultipleChoiceItemObject;
-            const pageNavigationType =
-              values[index][COL_INDEX.CHOICE.PAGE_NAVIGATION_TYPE];
-            const gotoPageTitle =
-              values[index][COL_INDEX.CHOICE.GOTO_PAGE_TITLE];
-            if (typeof pageNavigationType === "string")
-              choice.pageNavigationType = pageNavigationType as string;
-            if (typeof gotoPageTitle === "string")
-              choice.gotoPageTitle = gotoPageTitle as string;
-            quizItem.choices.push(choice);
-          } else if (type === "checkbox.choice") {
-            const quizItem = (itemObjects[
-              itemObjects.length - 1
-            ] as unknown) as CheckboxItemObject;
-            quizItem.choices.push(choice);
-          } else if (type === "list.choice") {
-            const quizItem = (itemObjects[
-              itemObjects.length - 1
-            ] as unknown) as ListItemObject;
-            quizItem.choices.push(choice);
-          }
-        } else if (type === "grid.row" || type === "grid.column") {
+        const url = row[COL_INDEX.FEEDBACK.URL] as string;
+        if (type === "generalFeedback.link") {
           const quizItem = (itemObjects[
             itemObjects.length - 1
-          ] as unknown) as GridItemObject;
-          if (type === "grid.row") {
-            quizItem.rows.push(
-              values[index][COL_INDEX.GRID.ROW_LABEL] as string
-            );
-          } else if (type === "grid.column") {
-            quizItem.columns.push(
-              values[index][COL_INDEX.GRID.COL_LABEL] as string
-            );
+          ] as unknown) as GeneralFeedbackObject;
+          if (quizItem.generalFeedback) {
+            quizItem.generalFeedback.linkUrls.push(url);
+          } else {
+            throw new Error();
           }
-        } else if (type === "checkboxGrid.row" || type === "checkboxGrid.column") {
+        } else if (type === "correctnessFeedback.link") {
           const quizItem = (itemObjects[
             itemObjects.length - 1
-          ] as unknown) as CheckboxGridItemObject;
-          if (type === "checkboxGrid.row") {
-            quizItem.rows.push(
-              values[index][COL_INDEX.CHECKBOX_GRID.ROW_LABEL] as string
-            );
-          } else if (type === "checkboxGrid.column") {
-            quizItem.columns.push(
-              values[index][COL_INDEX.CHECKBOX_GRID.COL_LABEL] as string
-            );
+          ] as unknown) as CorrectnessFeedbackObject;
+          if (quizItem.feedbackForCorrect) {
+            quizItem.feedbackForCorrect.linkUrls.push(url);
+          } else {
+            throw new Error();
           }
+        } else if (type === "incorrectnessFeedback.link") {
+          const quizItem = (itemObjects[
+            itemObjects.length - 1
+          ] as unknown) as CorrectnessFeedbackObject;
+          if (quizItem.feedbackForIncorrect) {
+            quizItem.feedbackForIncorrect.linkUrls.push(url);
+          } else {
+            throw new Error();
+          }
+        }
+      } else if (isChoice) {
+        const value = row[COL_INDEX.CHOICE.VALUE] as string;
+        const choice =
+          row[COL_INDEX.CHOICE.IS_CORRECT_ANSWER] === null
+            ? ({
+                value,
+              } as ChoiceObject)
+            : ({
+                value,
+                isCorrectAnswer:
+                  row[COL_INDEX.CHOICE.IS_CORRECT_ANSWER],
+              } as ChoiceObject);
+        if (type === "multipleChoice.choice") {
+          const quizItem = (itemObjects[
+            itemObjects.length - 1
+          ] as unknown) as MultipleChoiceItemObject;
+          const pageNavigationType =
+            row[COL_INDEX.CHOICE.PAGE_NAVIGATION_TYPE];
+          const gotoPageTitle =
+            row[COL_INDEX.CHOICE.GOTO_PAGE_TITLE];
+          if (typeof pageNavigationType === "string")
+            choice.pageNavigationType = pageNavigationType as string;
+          if (typeof gotoPageTitle === "string")
+            choice.gotoPageTitle = gotoPageTitle as string;
+          quizItem.choices.push(choice);
+        } else if (type === "checkbox.choice") {
+          const quizItem = (itemObjects[
+            itemObjects.length - 1
+          ] as unknown) as CheckboxItemObject;
+          quizItem.choices.push(choice);
+        } else if (type === "list.choice") {
+          const quizItem = (itemObjects[
+            itemObjects.length - 1
+          ] as unknown) as ListItemObject;
+          quizItem.choices.push(choice);
+        }else{
+          throw new Error();
+        }
+      } else if (type === "grid.row" || type === "grid.column") {
+        const quizItem = (itemObjects[
+          itemObjects.length - 1
+        ] as unknown) as GridItemObject;
+        if (type === "grid.row") {
+          quizItem.rows.push(
+            row[COL_INDEX.GRID.ROW_LABEL] as string
+          );
+        } else if (type === "grid.column") {
+          quizItem.columns.push(
+            row[COL_INDEX.GRID.COL_LABEL] as string
+          );
+        } else {
+          throw new Error()
+        }
+      } else if (type === "checkboxGrid.row" || type === "checkboxGrid.column") {
+        const quizItem = (itemObjects[
+          itemObjects.length - 1
+        ] as unknown) as CheckboxGridItemObject;
+        if (type === "checkboxGrid.row") {
+          quizItem.rows.push(
+            row[COL_INDEX.CHECKBOX_GRID.ROW_LABEL] as string
+          );
+        } else if (type === "checkboxGrid.column") {
+          quizItem.columns.push(
+            row[COL_INDEX.CHECKBOX_GRID.COL_LABEL] as string
+          );
+        } else{
+          throw new Error()
         }
       }
     }
-    return index;
-  }
+}
 
-  // itemObjects.push({})
-  return 1;
-};
-
-export default function sheetToJson(sheet: Sheet): FormObject {
+export default function sheetToJson(sheet: Sheet, createdAt: number, updatedAt: number): FormObject {
   const values = sheet
     .getRange(1, 1, sheet.getLastRow(), sheet.getLastColumn())
     .getValues();
 
+  const metadata = {...createFormMetadata(values), createdAt, updatedAt};
+  const items = createFormItemObjects(values);
+
   return {
-    metadata: createFormMetadata(values),
-    items: createFormItemObjects(values),
+    metadata,
+    items,
   };
 }

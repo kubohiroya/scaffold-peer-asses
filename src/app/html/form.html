@@ -1,0 +1,30 @@
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <base target="_top" />
+    <?!= HtmlService.createHtmlOutputFromFile('formStyle').getContent(); ?>
+    <script>
+      const gid = "<?= gid ?>";
+    </script>
+  </head>
+  <body>
+  <div id="app">
+      <v-app>
+          <v-main>
+              <div v-if="initializing">
+                  <h3>読込中...</h3>
+                  <v-progress-linear
+                          indeterminate
+                  ></v-progress-linear>
+              </div>
+              <div v-else>
+                  <div id="surveyContainer">
+                      <survey :survey="survey"></survey>
+                  </div>
+              </div>
+          </v-main>
+      </v-app>
+    </div>
+    <?!= HtmlService.createHtmlOutputFromFile('formScript').getContent(); ?>
+  </body>
+</html>

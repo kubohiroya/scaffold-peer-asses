@@ -1,16 +1,10 @@
-/*
 import Item = GoogleAppsScript.Forms.Item;
 import QuizFeedback = GoogleAppsScript.Forms.QuizFeedback;
 import MultipleChoiceItem = GoogleAppsScript.Forms.MultipleChoiceItem;
-import Alignment = GoogleAppsScript.Forms.Alignment;
-*/
-
-import Item = GoogleAppsScript.Forms.Item;
-import QuizFeedback = GoogleAppsScript.Forms.QuizFeedback;
-import MultipleChoiceItem = GoogleAppsScript.Forms.MultipleChoiceItem;
-// import Alignment = GoogleAppsScript.Forms.Alignment;
 
 export interface FormMetadataObject {
+  createdAt: number;
+  updatedAt: number;
   quiz?: boolean;
   allowResponseEdits?: boolean;
   collectEmail?: boolean;
@@ -44,7 +38,7 @@ export interface FormObject {
   >;
 }
 
-export const TYPES = {
+export const GOOGLE_FORMS_TYPES = {
   checkbox: FormApp.ItemType.CHECKBOX,
   checkboxGrid: FormApp.ItemType.CHECKBOX_GRID,
   date: FormApp.ItemType.DATE,
@@ -62,6 +56,10 @@ export const TYPES = {
   time: FormApp.ItemType.TIME,
 };
 
+export const SERVEYJS_ITEM_TYPES = {
+  MATRIX: 'matrix',
+}
+
 export const TYPE_NAMES = {
   [FormApp.ItemType.CHECKBOX]: "checkbox",
   [FormApp.ItemType.CHECKBOX_GRID]: "checkboxGrid",
@@ -78,14 +76,18 @@ export const TYPE_NAMES = {
   [FormApp.ItemType.SECTION_HEADER]: "sectionHeader",
   [FormApp.ItemType.TEXT]: "text",
   [FormApp.ItemType.TIME]: "time",
+  [SERVEYJS_ITEM_TYPES.MATRIX]: 'surveyJs:matrix'
 };
-/*
-export const ALIGNMENTS = new Map<string, Alignment>([
-  ["LEFT", Alignment.LEFT],
-  ["CENTER", Alignment.CENTER],
-  ["RIGHT", Alignment.RIGHT],
-]);
-*/
+
+export interface SurveyJsMatrixItemObject{
+  type: 'surveyJs:matrix',
+  name: string,
+  columns: Array<string>,
+  rows: Array<{value: string, text: string}>;
+  cells: {[rowName: string]: {[columnName: string]: string}},
+  _cellIndex: number,
+}
+
 export interface BlobObject {
   name: string;
   contentType: string;
@@ -111,8 +113,8 @@ export interface CorrectnessFeedbackObject extends QuizFeedbackObject {
 
 export interface ItemObject {
   type: string;
-  id: number;
-  index: number;
+  // id: number;
+  // index: number;
   title: string;
   helpText: string;
 }

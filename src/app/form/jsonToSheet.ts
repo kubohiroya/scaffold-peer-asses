@@ -204,11 +204,11 @@ const typeStyles = {
   "destinationType": METADATA_OPTIONAL,
 
   "checkboxGrid": CHECKBOX_GRID_ITEM,
-  "checkboxGrid:row": CHECKBOX_GRID_ROW,
-  "checkboxGrid:column": CHECKBOX_GRID_COLUMN,
+  "checkboxGrid.row": CHECKBOX_GRID_ROW,
+  "checkboxGrid.column": CHECKBOX_GRID_COLUMN,
   "grid": GRID_ITEM,
-  "grid:row": GRID_ROW,
-  "grid:column": GRID_COLUMN,
+  "grid.row": GRID_ROW,
+  "grid.column": GRID_COLUMN,
 
   "time": TIME_ITEM,
   "date": DATE_ITEM,
@@ -221,9 +221,9 @@ const typeStyles = {
   "list":LIST_ITEM,
   "multipleChoice":MULTIPLE_CHOICE_ITEM,
 
-  "checkbox:choice":CHECKBOX_CHOICE,
-  "list:choice":LIST_CHOICE,
-  "multipleChoice:choice":MULTIPLE_CHOICE_CHOICE,
+  "checkbox.choice":CHECKBOX_CHOICE,
+  "list.choice":LIST_CHOICE,
+  "multipleChoice.choice":MULTIPLE_CHOICE_CHOICE,
 
 
   "pageBreak": PAGE_BREAK_ITEM,
@@ -310,7 +310,7 @@ function itemToRows(item: any) {
           const gotoPageTitle = choice.gotoPageTitle
             ? choice.gotoPageTitle
             : "";
-          return [item.type+":choice", choice.value, isCorrectAnswer, pageNavigationType, gotoPageTitle];
+          return [item.type+".choice", choice.value, isCorrectAnswer, pageNavigationType, gotoPageTitle];
         })
         .forEach(function (row: any) {
           rows.push(row);
@@ -320,10 +320,10 @@ function itemToRows(item: any) {
     case "grid":
       rows.push([item.type, item.title, item.helpText, item.isRequired]);
       item.rows.forEach((row: string)=>{
-        rows.push([item.type+":row", row]);
+        rows.push([item.type+".row", row]);
       })
       item.columns.forEach((column: string)=>{
-        rows.push([item.type+":column", column]);
+        rows.push([item.type+".column", column]);
       })
       break;
     case "scale":

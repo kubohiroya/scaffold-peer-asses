@@ -3,70 +3,84 @@ export function onOpen() {
 
   const importClassroomSubMenu = ui
     .createMenu("A. Classroomからの抽出")
-    .addItem("1.コース一覧（courses）を抽出", "importCourses")
+    .addItem("1. コース一覧（courses:教員名）を抽出/抽出内容を更新", "importCourses")
     .addSeparator()
-    .addItem("2.生徒一覧（students:コース名）を抽出", "importCourseStudents")
-    .addItem("3.教員一覧（teachers:コース名）を抽出", "importCourseTeachers")
-    .addItem("4.課題一覧（courseworks:コース名）を抽出", "importCourseWorks")
+    .addItem("2. 生徒一覧（students:コース名）を抽出/抽出内容を更新", "importCourseStudents")
+    .addItem("3. 教員一覧（teachers:コース名）を抽出/抽出内容を更新", "importCourseTeachers")
+    .addItem("4. 課題一覧（courseworks:コース名）を抽出/抽出内容を更新", "importCourseWorks")
     .addSeparator()
     .addItem(
-      "5.提出物一覧（submissions:コース名 課題名）を抽出",
+      "5. 提出物一覧（submissions:コース名 課題名）を抽出/抽出内容を更新",
       "importStudentSubmissions"
     );
 
   const exportClassroomSubMenu = ui
-    .createMenu("B. Classroomの反映")
-    .addItem("1.コース（courses）の反映", "exportCourses")
+    .createMenu("B. Classroomの作成/更新")
+    .addItem("1. コース一覧（courses:教員名）からの作成/更新", "updateCourses")
     .addSeparator()
-    .addItem("2.生徒（students:コース名）の反映", "exportCourseStudents")
-    .addItem("3.教員（teachers:コース名）の反映", "exportCourseTeachers")
-    .addItem("4.課題（courseworks:コース名）の反映", "exportCourseWorks");
+    .addItem("2. 生徒一覧（students:コース名）からの追加/削除", "updateCourseStudents")
+    .addItem("3. 教員一覧（teachers:コース名）からの追加/削除", "updateCourseTeachers")
+    .addItem("4. 課題一覧（courseworks:コース名）からの追加/削除/更新", "updateCourseWorks");
 
   const importFormSubMenu = ui
     .createMenu("C. フォームからの抽出")
     .addItem(
-      "1.フォーム定義（form:フォーム名）を抽出...",
-      "importFormWithDialog"
+      "1. フォーム定義（form:フォーム名）を抽出....",
+      "importFormWithPicker"
     )
-    .addSeparator()
-    .addItem("2.フォーム定義（form:フォーム名）の抽出内容を更新", "importForm")
-
+    .addItem("2. フォーム定義（form:フォーム名）の抽出内容を更新", "importForm");
 
   const exportFormSubMenu = ui
-    .createMenu("D. フォームの反映")
+    .createMenu("D. フォームの作成/更新")
     .addItem(
-      "1.フォーム定義（form:フォーム名）をもとに新規作成...",
+      "1. フォーム定義（form:フォーム名）をもとに新規作成",
       "exportFormWithDialog"
     )
+    .addItem(
+      "2. フォーム定義（form:フォーム名）をもとに更新",
+      "updateForm"
+    )
     .addSeparator()
-    .addItem("2.フォーム定義（form:フォーム名）をもとに更新", "exportForm")
-   ;
+    .addItem(
+      "3. フォーム定義（form:フォーム名）をもとにプレビュー",
+      "previewForm"
+    )
 
   const templateSubMenu = ui
-    .createMenu("E. テンプレートの準備")
+    .createMenu("E. 評価")
+    .addSubMenu(ui.createMenu("1-a.「提出物一覧(submissions:)」からの個人評価")
+      .addItem(
+        "1.評価フォーム雛形を選択・新規スプレッドシート(config:)作成・評価を準備",
+        "startConfigWithSubmissionsWithPicker")
+      .addItem(
+        "2.評価フォーム雛形をURL指定・新規スプレッドシート(config:)を作成・評価を準備",
+        "startConfigWithSubmissionsWithInputBox")
+    )
+    .addSubMenu(ui.createMenu("1-b.「提出物一覧(submissions:)」からのグループ評価")
+      .addItem("1.「グループ一覧(groups:)」と評価フォーム雛形を選択・新規スプレッドシート(config:)を作成・評価を準備",
+        "startConfigWithCustomSheetWithPicker")
+      .addItem("2.「グループ一覧(groups:)」と評価フォーム雛形URLを指定・新規スプレッドシート(config:)を作成・評価を準備",
+        "startConfigWithDialogWithCustomSheetWithInputBox"))
+    .addSeparator()
     .addItem(
-      "1.相互評価フォーム（form:コース名 課題名）を準備",
-      "createFormTemplate"
+      "2. 現在のスプレッドシート(config:)を開いて評価の準備を再開",
+      "continueConfig"
+    )
+    .addSeparator()
+    .addItem(
+      "3. 現在のスプレッドシート(config:)を用いて評価フォームを開く",
+      "openReviewPage"
     )
     .addItem(
-      "2.評価者-被評価者の対応表（map:コース名 課題名）を準備",
-      "createMapTemplate"
-    )
-    .addItem(
-      "3.相互評価設定シート（review:コース名 課題名）を準備",
-      "createConfigTemplate"
+      "4. 現在のスプレッドシート(config:)を用いて評価結果シートを開く",
+      "openResultSheet"
     );
 
-  const buildSubMenu = ui
-    .createMenu("F. ビルド")
-    .addItem("1.評価フォームのビルド", "buildForm")
-    .addItem("2.評価サマリーのビルド", "buildSummary");
-
   const notifySubMenu = ui
-    .createMenu("G. 通知")
-    .addItem("1-a.評価者への通知", "notifyToReviewers")
-    .addItem("1-b.評価者へのリマインド", "remindToReviewers")
-    .addItem("2.被評価者への通知", "notifyToReviewees");
+    .createMenu("F. 通知")
+    .addItem("1-a. 評価者への通知", "notifyToReviewers")
+    .addItem("1-b. 評価者へのリマインド", "remindToReviewers")
+    .addItem("2. 被評価者への通知", "notifyToReviewees");
 
   ui.createMenu("相互評価")
     .addSubMenu(importClassroomSubMenu)
@@ -76,8 +90,6 @@ export function onOpen() {
     .addSubMenu(exportFormSubMenu)
     .addSeparator()
     .addSubMenu(templateSubMenu)
-    .addSeparator()
-    .addSubMenu(buildSubMenu)
     .addSeparator()
     .addSubMenu(notifySubMenu)
     .addToUi();

@@ -39,7 +39,7 @@ import TimeItem = GoogleAppsScript.Forms.TimeItem;
  * @param form {Form} a Google Form Object
  * */
 
-const getFormMetadata = (form: Form): FormMetadataObject => {
+const getFormMetadata = (form: Form, createdAt: number, updatedAt: number): FormMetadataObject => {
   const metadata: FormMetadataObject = {
     quiz: form.isQuiz(),
     collectEmail: form.collectsEmail(),
@@ -60,6 +60,8 @@ const getFormMetadata = (form: Form): FormMetadataObject => {
     shuffleQuestions: form.getShuffleQuestions(),
     summaryUrl: form.getSummaryUrl(),
     title: form.getTitle(),
+    createdAt,
+    updatedAt,
   };
 
   try {
@@ -72,9 +74,9 @@ const getFormMetadata = (form: Form): FormMetadataObject => {
   return metadata;
 };
 
-export default function formToJson(form: Form): FormObject {
+export default function formToJson(form: Form, createdAt: number, updatedAt: number): FormObject {
   return {
-    metadata: getFormMetadata(form),
+    metadata: getFormMetadata(form, createdAt, updatedAt),
     items: form.getItems().map(itemToObject),
   };
 }
@@ -395,7 +397,7 @@ function itemToObject(
     case FormApp.ItemType.VIDEO:
       return createItemObject(item, function (typedItem: VideoItem) {
         return {
-          videoUrl: undefined, //typedItem.getVideoUrl(),
+          // videoUrl: typedItem.getVideoUrl(),
           alignment: getAlignmentString(typedItem.getAlignment()),
           width: typedItem.getWidth(),
         };

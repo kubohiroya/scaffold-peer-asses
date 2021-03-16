@@ -11,25 +11,10 @@ import StudentSubmission = GoogleAppsScript.Classroom.Schema.StudentSubmission;
 import Sheet = GoogleAppsScript.Spreadsheet.Sheet;
 import Course = GoogleAppsScript.Classroom.Schema.Course;
 import CourseWork = GoogleAppsScript.Classroom.Schema.CourseWork;
+import {formatDateTime} from '../dateTimeUtils';
 
 const teacherProfiles = new Map<string, UserProfile>();
 const studentProfiles = new Map<string, UserProfile>();
-//const CourseMap = new Map<number, Course>();
-//const CourseWorkMap = new Map<number, CourseWork>();
-
-const timezone = SpreadsheetApp.getActive().getSpreadsheetTimeZone();
-
-function formatDateTime(datetime: string | undefined): string {
-  if (datetime) {
-    return Utilities.formatDate(
-      new Date(datetime),
-      timezone,
-      "yyyy/MM/dd HH:mm:ss"
-    );
-  } else {
-    return "(invalid date)";
-  }
-}
 
 function listCourses(teacherId: string): Course[] {
   if (!Classroom.Courses) {
@@ -59,7 +44,7 @@ function listCourses(teacherId: string): Course[] {
   return courses;
 }
 
-function listStudentProfiles(courseId: string): Student[] {
+export function listStudentProfiles(courseId: string): Student[] {
   if (!Classroom.Courses || !Classroom.Courses.Students) {
     throw new Error("Classroom.Courses is null");
   }
@@ -86,7 +71,7 @@ function listStudentProfiles(courseId: string): Student[] {
   return students;
 }
 
-function getTeacherProfile(courseId: string, teacherId: string): UserProfile {
+export function getTeacherProfile(courseId: string, teacherId: string): UserProfile {
   if (!Classroom.Courses || !Classroom.Courses.Teachers) {
     throw new Error("Classroom.Courses is null");
   }
@@ -107,7 +92,7 @@ function getTeacherProfile(courseId: string, teacherId: string): UserProfile {
   }
 }
 
-function listTeacherProfiles(courseId: string): Teacher[] {
+export function listTeacherProfiles(courseId: string): Teacher[] {
   if (!Classroom.Courses || !Classroom.Courses.Teachers) {
     throw new Error("Classroom.Courses is null");
   }
@@ -133,7 +118,7 @@ function listTeacherProfiles(courseId: string): Teacher[] {
   return teachers;
 }
 
-function getStudentProfile(courseId: string, studentId: string): UserProfile {
+export function getStudentProfile(courseId: string, studentId: string): UserProfile {
   if (!Classroom.Courses || !Classroom.Courses.Students) {
     throw new Error("Classroom.Courses is null");
   }
@@ -199,11 +184,11 @@ function listCourseWorks(courseId: string, courseName: string): CourseWork[] {
   return courseWorks;
 }
 
-function listStudentSubmissions(
+export function listStudentSubmissions(
   courseId: string,
   courseName: string,
   courseWorkId: string
-): Array<any> {
+): StudentSubmission[] {
   if (
     !Classroom.Courses ||
     !Classroom.Courses.CourseWork ||
@@ -238,7 +223,7 @@ function listStudentSubmissions(
   return submissions;
 }
 
-const exportCourseMemberSheet = (
+const updateCourseMemberSheet = (
   sheet: Sheet,
   courseId: string,
   courseName: string,
@@ -246,7 +231,7 @@ const exportCourseMemberSheet = (
 ) => {
   sheet.clear();
   sheet.appendRow([
-    "courseID",
+    "courseId",
     "コース名",
     "メールアドレス",
     "氏名",
@@ -259,14 +244,17 @@ const exportCourseMemberSheet = (
         courseName,
         item.profile.emailAddress,
         item.profile.name.fullName,
-        (item.profile.photoUrl.startsWith("//") ? "https:" : "") +
-          item.profile.photoUrl,
+        regulatePhotoUrl(item.profile.photoUrl),
       ]);
     }
   });
 };
 
-function exportCoursesSheet(sheet: Sheet, data: Course[]) {
+export function regulatePhotoUrl(photoUrl: string){
+  return (photoUrl.startsWith("//") ? "https:" : "") + photoUrl;
+}
+
+function updateCoursesSheet(sheet: Sheet, data: Course[]) {
   sheet.clear();
   sheet.appendRow([
     "courseId",
@@ -318,7 +306,7 @@ function exportCoursesSheet(sheet: Sheet, data: Course[]) {
   });
 }
 
-function exportCourseWorksSheet(
+function updateCourseWorksSheet(
   sheet: Sheet,
   courseName: string,
   data: CourseWork[]
@@ -334,8 +322,21 @@ function exportCourseWorksSheet(
       courseWork.title,
       courseWork.description,
       courseWork.state,
+      courseWork.alternateLink,
       formatDateTime(courseWork.creationTime),
       formatDateTime(courseWork.updateTime),
+      courseWork.dueDate, // TODO human readable format
+      courseWork.dueTime, // TODO human readable format
+      courseWork.scheduledTime,
+      courseWork.maxPoints,
+      courseWork.workType,
+      courseWork.associatedWithDeveloper,
+      courseWork.assigneeMode,
+      courseWork.individualStudentsOptions?.studentIds?.join("\t"),
+      courseWork.creatorUserId,
+      courseWork.topicId, // TODO human readable topic name
+      courseWork.assignment?.studentWorkFolder?.alternateLink,
+      courseWork.multipleChoiceQuestion?.choices?.join("\t")
     ];
   };
 
@@ -347,8 +348,21 @@ function exportCourseWorksSheet(
     "課題タイトル",
     "説明",
     "状態",
+    "代替リンク",
     "作成日",
     "更新日",
+    "期限日",
+    "期限時刻",
+    "スケジュールされた時刻",
+    "配点",
+    "種類",
+    "開発者モード",
+    "割当",
+    "個別割当対象者リスト",
+    "作成者ID",
+    "トピックID",
+    "提出物フォルダ",
+    "選択肢",
   ]);
   data.forEach(function (courseWork) {
     if (courseWork.courseId) {
@@ -358,7 +372,7 @@ function exportCourseWorksSheet(
   });
 }
 
-function exportStudentSubmissionsSheet(
+function updateStudentSubmissionsSheet(
   sheet: Sheet,
   courseName: string,
   courseWorkTitle: string,
@@ -387,6 +401,7 @@ function exportStudentSubmissionsSheet(
       courseWorkTitle,
       userProfile.name?.fullName || userProfile.emailAddress,
       userProfile.emailAddress,
+      regulatePhotoUrl(userProfile.photoUrl),
       studentSubmission.state,
       formatDateTime(studentSubmission.creationTime),
       formatDateTime(studentSubmission.updateTime),
@@ -433,6 +448,7 @@ function exportStudentSubmissionsSheet(
     "課題タイトル",
     "氏名",
     "メールアドレス",
+    "写真URL",
     "状態",
     "作成日",
     "更新日",
@@ -443,9 +459,9 @@ function exportStudentSubmissionsSheet(
 }
 
 export function importCourses() {
-  const email = Session.getActiveUser().getEmail();
-  let sheet = createOrSelectSheetBySheetName("courses", "black");
-  exportCoursesSheet(sheet, listCourses(email));
+  const user = Session.getActiveUser();
+  let sheet = createOrSelectSheetBySheetName("courses:"+user.getEmail(), "black");
+  updateCoursesSheet(sheet, listCourses(user.getEmail()));
 }
 
 export function importCourseTeachers() {
@@ -463,7 +479,7 @@ export function importCourseTeachers() {
           "」には、教員が登録されていません。"
       );
     }
-    exportCourseMemberSheet(teacherSheet, courseId, courseName, teachers);
+    updateCourseMemberSheet(teacherSheet, courseId, courseName, teachers);
   } catch (err) {
     Browser.msgBox(err);
   }
@@ -484,7 +500,7 @@ export function importCourseStudents() {
           "」には、生徒が登録されていません。"
       );
     }
-    exportCourseMemberSheet(studentSheet, courseId, courseName, students);
+    updateCourseMemberSheet(studentSheet, courseId, courseName, students);
   } catch (err) {
     Browser.msgBox(err);
   }
@@ -498,7 +514,7 @@ export function importCourseWorks() {
       "yellow"
     );
     const courseWorks = listCourseWorks(courseId, courseName);
-    exportCourseWorksSheet(targetSheet, courseName, courseWorks);
+    updateCourseWorksSheet(targetSheet, courseName, courseWorks);
   } catch (error) {
     Browser.msgBox(error);
   }
@@ -524,7 +540,7 @@ export function importStudentSubmissions() {
       "submissions:" + targetSheetName,
       "orange"
     );
-    exportStudentSubmissionsSheet(
+    updateStudentSubmissionsSheet(
       targetSheet,
       courseName,
       courseWorkTitle,
@@ -534,3 +550,4 @@ export function importStudentSubmissions() {
     Browser.msgBox(error);
   }
 }
+

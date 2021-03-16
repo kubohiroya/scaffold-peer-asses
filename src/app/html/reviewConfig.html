@@ -1,0 +1,395 @@
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <base target="_top" />
+    <?!= HtmlService.createHtmlOutputFromFile('reviewConfigStyle').getContent(); ?>
+  </head>
+  <body>
+    <div id="app">
+      <v-app>
+        <v-main class="mx-3">
+          <v-tabs v-model="tab">
+            <v-tab> 基本情報 </v-tab>
+            <v-tab> 設定 </v-tab>
+            <v-tab> フォーム </v-tab>
+          </v-tabs>
+          <v-tabs-items v-model="tab" style="overflow: scroll">
+            <v-tab-item>
+              <h3>
+                <v-icon>mdi-google-classroom</v-icon>&nbsp; 評価の基本情報
+              </h3>
+
+              <v-container class="mx-3" style="width: 250px">
+                <v-row dense>
+                  <v-text-field
+                    :loading="initializing"
+                    dense
+                    outlined
+                    label="コースID"
+                    readonly
+                    id="courseId"
+                    v-model="config.courseId"
+                  ></v-text-field>
+                </v-row>
+                <v-row dense>
+                  <v-text-field
+                    :loading="initializing"
+                    dense
+                    outlined
+                    label="コース名"
+                    readonly
+                    id="courseName"
+                    v-model="config.courseName"
+                  ></v-text-field>
+                </v-row>
+                <v-row dense>
+                  <v-text-field
+                    :loading="initializing"
+                    dense
+                    outlined
+                    label="評価対象となる課題ID"
+                    readonly
+                    id="courseWorkId"
+                    v-model="config.courseWorkId"
+                  ></v-text-field>
+                </v-row>
+                <v-row dense>
+                  <v-text-field
+                    :loading="initializing"
+                    dense
+                    outlined
+                    label="評価対象となる課題タイトル"
+                    readonly
+                    id="courseWorkTitle"
+                    v-model="config.courseWorkTitle"
+                  ></v-text-field>
+                </v-row>
+                <v-row dense>
+                  <v-text-field
+                    :loading="initializing"
+                    dense
+                    outlined
+                    label="評価対象となる提出物一覧URL"
+                    readonly
+                    id="submissionsUrl"
+                    v-model="config.submissionsUrl"
+                  ></v-text-field>
+                </v-row>
+
+                <v-row dense>
+                  <v-text-field
+                    :loading="initializing"
+                    dense
+                    outlined
+                    label="グループ定義のURL"
+                    readonly
+                    id="groupSrcUrl"
+                    v-model="config.groupSrcUrl"
+                  ></v-text-field>
+                </v-row>
+
+                <v-row dense>
+                  <v-text-field
+                    :loading="initializing"
+                    dense
+                    outlined
+                    label="フォーム雛形の種類"
+                    readonly
+                    id="formId"
+                    v-model="config.formSrcType"
+                  ></v-text-field>
+                </v-row>
+
+                <v-row dense>
+                  <v-text-field
+                    :loading="initializing"
+                    dense
+                    outlined
+                    label="フォーム雛形のURL"
+                    readonly
+                    id="formId"
+                    v-model="config.formSrcUrl"
+                  ></v-text-field>
+                </v-row>
+
+                <v-row dense>
+                  <v-text-field
+                    :loading="initializing"
+                    dense
+                    outlined
+                    label="フォーム雛形のタイトル"
+                    readonly
+                    id="formSrcTitle"
+                    v-model="config.formSrcTitle"
+                  ></v-text-field>
+                </v-row>
+              </v-container>
+            </v-tab-item>
+
+            <v-tab-item>
+                <v-form>
+                <div>
+                  <h3>
+                    <v-icon>mdi-format-list-checks</v-icon>&nbsp; 評価の設定
+                  </h3>
+                  <v-container class="mx-3" style="width: 250px" dense>
+                    <v-row>
+                      <v-radio-group
+                        prepend-icon="mdi-account-arrow-right"
+                        label="評価者の設定元"
+                        v-model="config.reviewerSrcType"
+                        hide-details
+                        required
+                      >
+                        <v-radio
+                          label="GoogleClassroomの教師(オーナー)"
+                          value="owner"
+                          :disabled="config.courseId === ''"
+                        ></v-radio>
+                        <v-radio
+                          label="GoogleClassroomの教師(教師全員)"
+                          value="teachers"
+                          :disabled="config.courseId === ''"
+                        ></v-radio>
+                        <v-radio
+                          label="GoogleClassroomの生徒(未提出者を含める)"
+                          value="students"
+                          :disabled="config.courseId === ''"
+                        ></v-radio>
+                        <v-radio
+                          label="「提出物一覧」の生徒(未提出者を含めない)"
+                          value="submitters"
+                          :disabled="config.courseId === ''"
+                        ></v-radio>
+                        <v-radio
+                          label="Googleスプレッドシートで定義された評価者"
+                          value="spreadsheet"
+                        ></v-radio>
+                      </v-radio-group>
+                    </v-row>
+
+                    <v-row>
+                      <v-text-field
+                        label="評価者定義シートのURL"
+                        dense
+                        outlined
+                        persistent-hint
+                        style="margin-top: 8px"
+                        :disabled="config.reviewerSrcType!=='spreadsheet'"
+                        v-model="config.reviewerSrcSpreadsheetUrl"
+                      ></v-text-field>
+                    </v-row>
+                  </v-container>
+                  <v-container class="mx-3" style="width: 250px" dense>
+                    <v-row>
+                      <v-radio-group
+                        prepend-icon="mdi-account-arrow-left"
+                        label="被評価者の設定元"
+                        v-model="config.revieweeSrcType"
+                        hide-details
+                        required
+                      >
+                        <v-radio
+                          label="GoogleClassroomの生徒(未提出者を含める)"
+                          value="students"
+                          :disabled="config.courseWorkId === ''"
+                        ></v-radio>
+                        <v-radio
+                          label="「提出物一覧」の生徒(未提出者を含めない)"
+                          value="submitters"
+                          :disabled="config.courseWorkId === ''"
+                        ></v-radio>
+                      </v-radio-group>
+                    </v-row>
+                  </v-container>
+                </div>
+
+                <div>
+                  <h4><v-icon>mdi-domino-mask</v-icon>&nbsp; 匿名化</h4>
+                  <v-container class="mx-3" dense>
+                    <v-row dense>
+                      <v-checkbox
+                        hide-details
+                        label="被評価者を匿名化"
+                        v-model="config.anonymousReviewee"
+                      ></v-checkbox>
+                    </v-row>
+                    <v-row dense>
+                      <v-checkbox
+                        hide-details
+                        label="評価者を匿名化"
+                        v-model="config.anonymousReviewer"
+                      ></v-checkbox>
+                    </v-row>
+                  </v-container>
+                </div>
+
+                <div>
+                  <h4>
+                    <v-icon>mdi-account-switch</v-icon>&nbsp;
+                    評価者と被評価者の割り振り
+                  </h4>
+
+                  <v-container class="mx-3" style="width: 250px" dense>
+                    <v-row>
+                      <v-radio-group
+                        label="評価者と被評価者の関係づけ"
+                        v-model="config.binding"
+                        hide-details
+                        required
+                      >
+                        <v-radio
+                          label="1:N  教師(オーナー)が全員を評価"
+                          value="all"
+                          :disabled="config.reviewerSrcType!=='owner'"
+                        ></v-radio>
+                        <v-radio
+                          label="N:N  評価者全員が被評価者全員を評価"
+                          value="full"
+                        ></v-radio>
+                        <v-radio
+                          label="x:x 手動設定した割り振りで評価"
+                          value="manual"
+                        ></v-radio>
+                        <v-radio
+                          label="n:n ランダムな割り振りで評価"
+                          value="random"
+                          :disabled="config.reviewerSrcType==='owner'"
+                        ></v-radio>
+                      </v-radio-group>
+                    </v-row>
+                    <v-row dense>
+                      <v-text-field
+                        label="1人の被評価者が評価される数(n)"
+                        hint="ランダムな割り振り時に使用"
+                        persistent-hint
+                        style="margin-top: 18px"
+                        dense
+                        outlined
+                        rounded
+                        type="number"
+                        min="1"
+                        :disabled="config.binding!=='random' && config.binding!=='manual'"
+                        v-model.number="config.numReviewRequired"
+                      ></v-text-field>
+                    </v-row>
+                    <v-row dense>
+                      <v-checkbox
+                        hide-details
+                        label="自己評価を追加する(+1)"
+                        :disabled="config.binding!=='random'&&config.binding!=='manual'"
+                        v-model="config.reviewThemselves"
+                      ></v-checkbox>
+                    </v-row>
+                  </v-container>
+
+                  <v-container class="mx-3" dense>
+                    <v-row dense>
+                      <v-switch
+                        label="現在の割り振りを破棄して割り振りをやり直す"
+                        v-model="config.overwriteBindings"
+                      >
+                      </v-switch>
+                    </v-row>
+                  </v-container>
+                </div>
+
+                <v-btn
+                  class="ma-10 text-center"
+                  color="primary"
+                  large
+                  :disabled="config.courseId === '' || config.reviewerSrcType === '' || (config.reviewerSrcType === 'spreadsheet' && config.reviewerSrcSpreadsheetUrl === '') ||
+                  config.revieweeSrcType === '' || config.binding === '' ||(config.binding === 'random' && config.numReviewRequired === 0 )"
+                  :loading="submitting"
+                  @click="submitReviewConfig"
+                >
+                  評価フォームを配置
+                  <v-icon right>mdi-export-variant</v-icon>
+                </v-btn>
+              </v-form>
+            </v-tab-item>
+
+            <v-tab-item>
+              <h3><v-icon>mdi-school</v-icon>&nbsp; 評価フォーム</h3>
+              <v-container class="mx-3" style="width: 250px" dense>
+                <v-row>
+                  <v-switch
+                    label="評価を記入した後の修正を可能にする"
+                    v-model="config.allowResponseEdits"
+                    @change="submitPropertyValue('allowResponseEdits', config.allowResponseEdits)"
+                  ></v-switch>
+
+                  <v-switch
+                    label="被評価者の表示順をシャッフルする"
+                    v-model="config.shuffleReviewForms"
+                    @change="submitPropertyValue('shuffleReviewForms', config.shuffleReviewForms)"
+                  ></v-switch>
+
+                  <v-switch
+                    color="green"
+                    large
+                    label="評価を開始する"
+                    v-model="config.acceptingResponses"
+                    @change="submitPropertyValue('acceptingResponses', config.acceptingResponses)"
+                  ></v-switch>
+                  <p>
+                    「評価フォーム」および「評価を受けた結果の閲覧」の画面は、次のURLからアクセスできます。
+                  </p>
+
+                  <p>
+                    （評価を行う者・評価を受ける者の両方で、同じURLを用います）
+                  </p>
+
+                  <v-text-field
+                    label="評価フォーム"
+                    persistent-hint
+                    style="margin-top: 8px"
+                    dense
+                    outlined
+                    readonly
+                    :disabled="config.actionUrl==='' || config.actionUrl===undefined"
+                    v-model="config.actionUrl"
+                    append-icon="mdi-content-copy"
+                    :success="copyClipboardDone"
+                    @click:append="copyActionUrl"
+                  >
+                  </v-text-field>
+
+                  <v-btn
+                    class="ma-3 text-center"
+                    :disabled="config.actionUrl==='' || config.actionUrl===undefined"
+                    :loading="loadingReviewPage"
+                    :color="config.acceptingResponses? 'success':'secondary'"
+                    large
+                    @click="openReviewPage"
+                  >
+                    評価フォームを開く
+                    <v-icon right>mdi-open-in-new</v-icon>
+                  </v-btn>
+                </v-row>
+              </v-container>
+
+              <h3><v-icon>mdi-google-spreadsheet</v-icon>&nbsp; 評価結果</h3>
+              <v-container class="mx-3" style="width: 250px" dense>
+                <v-row>
+                  <v-btn
+                    class="ma-3 text-center"
+                    :disabled="config.actionUrl==='' || config.actionUrl===undefined"
+                    :loading="loadingReviewPage"
+                    :color="config.acceptingResponses? 'red':'secondary'"
+                    large
+                    @click="openResultSheet"
+                  >
+                    評価結果シートを開く
+                    <v-icon right>mdi-open-in-new</v-icon>
+                  </v-btn>
+                </v-row>
+              </v-container>
+            </v-tab-item>
+          </v-tabs-items>
+        </v-main>
+      </v-app>
+    </div>
+    <?!= HtmlService.createHtmlOutputFromFile('reviewConfigScript').getContent(); ?>
+  </body>
+</html>

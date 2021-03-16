@@ -1,0 +1,88 @@
+<script src="https://cdn.jsdelivr.net/npm/vue@2.6.12/dist/vue.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/vuetify@2.x/dist/vuetify.js"></script>
+<link
+  href="https://fonts.googleapis.com/css?family=Roboto:100,300,400,500,700,900"
+  rel="stylesheet"
+/>
+<link
+  href="https://cdn.jsdelivr.net/npm/@mdi/font@4.x/css/materialdesignicons.min.css"
+  rel="stylesheet"
+/>
+<link
+  href="https://cdn.jsdelivr.net/npm/vuetify@2.x/dist/vuetify.min.css"
+  rel="stylesheet"
+/>
+<script src="https://unpkg.com/survey-vue"></script>
+<link
+  href="https://unpkg.com/survey-vue/survey.min.css"
+  type="text/css"
+  rel="stylesheet"
+/>
+<meta
+  name="viewport"
+  content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, minimal-ui"
+/>
+
+<script>
+
+  Survey
+      .JsonObject
+      .metaData
+      .addProperty("questionbase", "tooltip");
+
+  Survey
+      .StylesManager
+      .applyTheme("default");
+
+  var app = new Vue({
+    el: "#app",
+    vuetify: new Vuetify(),
+    data: function () {
+      return {
+        initializing: true,
+        data: {
+            formSrc: {},
+            surveySrc: {},
+        },
+        survey: null,
+      };
+    },
+    methods: {
+      initializeData: function (initData) {
+          this.initializing = false;
+          this.data = { ...initData };
+          this.survey = new Survey.Model(this.data.surveySrc);
+
+          this.survey
+              .onAfterRenderQuestion
+              .add(function (survey, options) {
+                  //Return if there is no description to show in popup
+                  if (!options.question.tooltip)
+                      return;
+
+                  var header = options
+                      .htmlElement
+                      .querySelector("h5");
+                  header.title = options.question.tooltip;
+
+                  var span = document.createElement("span");
+                  span.innerText = "?";
+                  span.className = "survey-tooltip";
+                  header.appendChild(span);
+              });
+      },
+      submit: function (survey) {
+        const resultAsString = JSON.stringify(this.survey.data);
+        alert(resultAsString); //send Ajax request to your web server.
+      },
+    },
+    created: function () {
+      google.script.run
+        .withFailureHandler(function (error) {
+          alert(error);
+        })
+        .withSuccessHandler(this.initializeData)
+        .initializeFormPreviewPage(gid);
+    },
+  });
+</script>

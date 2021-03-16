@@ -1,6 +1,6 @@
 {
   "name": "scaffold-peer-assess",
-  "version": "1.0.0",
+  "version": "0.1.0",
   "main": "index.ts",
   "repository": "https://github.com/kubohiroya/scaffold-peer-assess.git",
   "author": "Hiroya Kubo <hiroya@cuc.ac.jp>",
@@ -12,6 +12,8 @@
     "test": "jest"
   },
   "devDependencies": {
+    "@types/md5": "^2.3.0",
+    "@types/shuffle-array": "^1.0.0",
     "@babel/core": "^7.13.8",
     "@babel/preset-env": "^7.13.9",
     "@babel/preset-typescript": "^7.13.0",
@@ -20,23 +22,33 @@
     "@typescript-eslint/parser": "^4.16.1",
     "babel-loader": "^8.2.2",
     "clasp": "^1.0.0",
-    "copy-webpack-plugin": "^7.0.0",
-    "es3ify-webpack-plugin": "^0.1.0",
+    "copy-webpack-plugin": "^8.0.0",
     "eslint": "^7.21.0",
     "eslint-config-prettier": "^8.1.0",
     "eslint-loader": "^4.0.2",
     "eslint-plugin-prettier": "^3.3.1",
+    "file-loader": "^6.2.0",
     "gas-webpack-plugin": "^2.0.0",
+    "google-apps-script-webpack-dev-server": "^1.0.0",
+    "html-loader": "^2.1.1",
+    "html-webpack-plugin": "^5.3.0",
     "jest": "^26.6.3",
     "prettier": "^2.2.1",
     "ts-jest": "^26.5.3",
     "ts-loader": "^8.0.17",
     "typescript": "^4.2.2",
+    "url-loader": "^4.1.1",
     "watch": "^1.0.2",
-    "webpack": "^5.24.2",
-    "webpack-cli": "^4.5.0"
+    "webpack": "5",
+    "webpack-cli": "^4.5.0",
+    "webpack-dev-server": "^3.11.2"
   },
-  "dependencies": {},
+  "dependencies": {
+    "dotenv": "^8.2.0",
+    "md5": "^2.3.0",
+    "shuffle-array": "^1.0.1",
+    "survey-vue": "^1.8.35"
+  },
   "jest": {
     "transform": {
       ".*\\.(ts)$": "<rootDir>/node_modules/ts-jest"

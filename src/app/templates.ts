@@ -14,5 +14,5 @@ export function createConfigTemplate() {
   );
    */
 }
-export function createMapTemplate() {}
-export function createFormTemplate() {}
+// export function createMapTemplate() {}
+// export function createFormTemplate() {}

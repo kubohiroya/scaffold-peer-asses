@@ -3,3 +3,5 @@ node_modules
 .clasp.json
 *~
 yarn-error.log
+dist/
+.env

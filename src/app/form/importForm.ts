@@ -2,7 +2,19 @@ import formToJson from "./formToJson";
 import jsonToSheet from "./jsonToSheet";
 import getMessages from "./messages";
 import Form = GoogleAppsScript.Forms.Form;
+import Sheet = GoogleAppsScript.Spreadsheet.Sheet;
+import {getCreatedAtUpdatedAtValues} from '../driveFileUtil';
+import {showPicker} from '../picker/picker';
 const uiMessages = getMessages(Session.getActiveUserLocale())["ui"];
+
+export function importFormWithPicker(): void {
+  // const apiKey = process.env.PICKER_API_KEY;
+  // if(apiKey) showFormPickerDialog(apiKey);
+  showPicker('フォームを選択...',  [
+    'application/vnd.google-apps.form',
+    'application/vnd.google-apps.spreadsheet'
+  ], 'onFormItemImported');
+}
 
 export function importFormWithDialog(): void {
   const inputBoxTitle = uiMessages["import form"];
@@ -17,12 +29,8 @@ export function importFormWithDialog(): void {
       throw uiMessages["form import canceled"];
     }
     let form = null;
-    if (input === "") {
-      form = FormApp.getActiveForm();
-    } else if (input.endsWith("/edit")) {
+    if (input.endsWith("/edit")) {
       form = FormApp.openByUrl(input);
-    }else{
-      // FIXME
     }
     if (!form) {
       Browser.msgBox(uiMessages["invalid form URL"] + ": " + input);
@@ -31,32 +39,15 @@ export function importFormWithDialog(): void {
     return form;
   }
 
-  const spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
-
-  try {
-    const form = importFormDialog();
-    const sheet = spreadsheet.insertSheet();
-    const json = formToJson(form);
-    // Logger.log(JSON.stringify(json, null, "  "));
-    jsonToSheet(json, sheet);
-  } catch (exception) {
-    Logger.log(exception);
-    if (exception.stack) {
-      Logger.log(exception.stack);
-    }
-    Browser.msgBox(
-      uiMessages["form import failed."] +
-        "\\n" +
-        JSON.stringify(exception, null, " ")
-    );
-  }
+  const form = importFormDialog();
+  const {createdAt, updatedAt} = getCreatedAtUpdatedAtValues(form.getId());
+  formToSheet(form, createdAt, updatedAt, null);
 }
 
 export function importForm(): void {
-  try {
-    const sheet = SpreadsheetApp.getActiveSheet();
+  const sheet = SpreadsheetApp.getActiveSheet();
 
-    const idRows = sheet
+  const idRows = sheet
       .getRange(1, 1, sheet.getLastRow(), 2)
       .getValues()
       .filter(function (row) {
@@ -65,23 +56,41 @@ export function importForm(): void {
     if (idRows.length === 0) {
       throw "`form id` row is not defined.";
     }
-    const id = idRows[0][1];
-    const form = FormApp.openById(id);
-    const json = formToJson(form);
+  const id = idRows[0][1];
+  const form = FormApp.openById(id);
+  const {createdAt, updatedAt} = getCreatedAtUpdatedAtValues(id);
+  formToSheet(form, createdAt, updatedAt, sheet);
+}
 
-    sheet.setName("form:"+json.metadata.title);
-    sheet.setTabColor("purple");
+export function formToSheet(form: Form, createdAt:number, updatedAt: number, sheet: Sheet): void {
+  try {
+    const json = formToJson(form, createdAt, updatedAt);
+
+    if(! sheet){
+      const spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
+      const title = "form:"+json.metadata.title;
+      sheet = spreadsheet.getSheetByName(title);
+      if(! sheet){
+        sheet = spreadsheet.insertSheet();
+        sheet.setName(title);
+      }else{
+        sheet.clear();
+      }
+      sheet.setTabColor("purple");
+      spreadsheet.setActiveSheet(sheet);
+    }
 
     jsonToSheet(json, sheet);
   } catch (exception) {
-    Logger.log(exception);
-    if (exception.stack) {
-      Logger.log(exception.stack);
-    }
-    Browser.msgBox(
-      uiMessages["form import failed."] +
+      Logger.log(exception);
+      if (exception.stack) {
+        Logger.log(exception.stack);
+      }
+      Browser.msgBox(
+        uiMessages["form import failed."] +
         "\\n" +
         JSON.stringify(exception, null, " ")
-    );
-  }
+      );
+    }
+
 }

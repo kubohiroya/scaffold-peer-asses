@@ -12,3 +12,10 @@ export const createOrSelectSheetBySheetName = (name: string, tabColor: string) =
 export const getSchema = (sheetName: string) => {
   return sheetName.split(":")[0];
 };
+
+export const getSheetByUrl = (url: string)=>{
+  const ss = SpreadsheetApp.openByUrl(url);
+  const gid = parseInt(url.split(/\#gid=/)[1]);
+  return ss.getSheets().find(sheet=>sheet.getSheetId() === gid);
+}
+

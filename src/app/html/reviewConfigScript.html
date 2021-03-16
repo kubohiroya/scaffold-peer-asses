@@ -1,0 +1,110 @@
+<script src="https://cdn.jsdelivr.net/npm/vue@2.6.12/dist/vue.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/vuetify@2.x/dist/vuetify.js"></script>
+<link href="https://fonts.googleapis.com/css?family=Roboto:100,300,400,500,700,900" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/@mdi/font@4.x/css/materialdesignicons.min.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/vuetify@2.x/dist/vuetify.min.css" rel="stylesheet">
+<script>
+    const app = new Vue({
+        el: '#app',
+        vuetify: new Vuetify(),
+        data() {
+            return {
+                tab: null,
+                copyClipboardDone: false,
+                initializing: true,
+                submitting: false,
+                loadingReviewPage: false,
+                loadingResultSheet: false,
+                config: {
+                    courseId: '',
+                    courseName:'',
+                    courseWorkId: '',
+                    courseWorkTitle: '',
+                    submissionsUrl: '',
+                    groupSrcUrl: '',
+                    formSrcType: '',
+                    formSrcUrl: '',
+                    formSrcTitle: '',
+                    reviewerSrcType: '',
+                    reviewerSrcSpreadsheetUrl: '',
+                    revieweeSrcType: '',
+                    binding: '',
+                    numReviewRequired: null,
+                    reviewThemselves: false,
+                    anonymousReviewee: false,
+                    anonymousReviewer: false,
+                    reviewPer: '1',
+                    actionUrl: '',
+                    resultUrl: '',
+                }
+            };
+        },
+        methods: {
+            initializeData(configData){
+                this.config = {...configData};
+                this.initializing = false;
+            },
+
+            submitReviewConfig: function(){
+                const setSubmitting = (value)=>{
+                    this.submitting = value;
+                };
+                const setActionUrl = (actionUrl) => {
+                    this.config.actionUrl = actionUrl;
+                };
+                setSubmitting(true);
+                google.script.run.withSuccessHandler(function(actionUrl){
+                    setActionUrl(actionUrl);
+                    setSubmitting(false);
+                }).withFailureHandler(function(error){
+                    setSubmitting(false);
+                    alert(error);
+                }).submitReviewConfig(this.config);
+            },
+
+            submitPropertyValue: function(key, value){
+                google.script.run.withSuccessHandler(function(actionUrl){
+                }).withFailureHandler(function(error){
+                    alert(error);
+                }).submitPropertyValue(this.config, key, value);
+            },
+
+            copyActionUrl(){
+                this.copyClipboardDone = true;
+                navigator.clipboard.writeText(this.config.actionUrl).catch((e) => {
+                    console.error(e);
+                })
+                setTimeout(this.dismissCopyClipboard, 3000);
+            },
+            dismissCopyClipboard(){
+                this.copyClipboardDone = false;
+            },
+            openReviewPage: function(){
+                const setLoadingReviewPage = (loadingReviewPage)=>{
+                    this.loadingReviewPage = loadingReviewPage;
+                }
+                setLoadingReviewPage(true);
+                google.script.run.withSuccessHandler(function(){
+                    setLoadingReviewPage(false);
+                }).withFailureHandler(function(){
+                    setLoadingReviewPage(false);
+                }).openReviewPage(this.config.actionUrl);
+            },
+            openResultSheet: function(){
+                const setLoadingResultSheet = (loadingResultSheet)=>{
+                    this.loadingResultSheet = loadingResultSheet;
+                }
+                setLoadingResultSheet(true);
+                google.script.run.withSuccessHandler(function(){
+                    setLoadingResultSheet(false);
+                }).withFailureHandler(function(){
+                    setLoadingResultSheet(false);
+                }).openResultSheet(this.config.resultUrl);
+            }
+        },
+        created: function(){
+            google.script.run.withSuccessHandler(this.initializeData).initializeReviewConfig();
+        }
+    });
+
+</script>

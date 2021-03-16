@@ -1,0 +1,238 @@
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <base target="_top" />
+    <?!= HtmlService.createHtmlOutputFromFile('reviewStyle').getContent(); ?>
+
+      <script src="https://unpkg.com/dayjs"></script>
+      <script src="https://unpkg.com/dayjs@1.10.4/locale/ja.js"></script>
+
+      <script>
+      const gid = "<?= gid ?>";
+      dayjs.locale('ja');
+    </script>
+  </head>
+  <body>
+    <div id="app" style="display: none">
+      <v-app>
+        <v-main class="mx-3" style="height: 100%">
+          <h1><v-icon large>mdi-school</v-icon>&nbsp; 評価</h1>
+          <v-progress-linear
+            v-if="initializing"
+            indeterminate
+          ></v-progress-linear>
+
+          <div v-else style="height: 100%; display: flex; flex-direction: column; align-items: flex-start">
+              <div >
+                  <div style="position:absolute; top: 8px; right: 3px; width: 250px; font-size: 50%">
+                      <v-select
+                              v-if="data.admin"
+                              dense
+                              outlined
+                              v-model="data.effectiveUserEmailAddress"
+                              :items="data.admin.reviewers"
+                              @change="switchUser"
+                      >
+                      </v-select>
+                  </div>
+
+                  <v-tabs v-model="modeTab">
+                      <v-tab
+                      ><v-icon>mdi-file-document</v-icon>&nbsp;
+                          自分の提出物</v-tab
+                      >
+                      <v-tab><v-icon>mdi-school</v-icon>&nbsp; 評価を実施</v-tab>
+                      <v-tab
+                      ><v-icon>mdi-chat</v-icon>&nbsp; 自分への評価</v-tab
+                      >
+                      <v-tab
+                      ><v-icon>mdi-chart-bar</v-icon>&nbsp;
+                          全体の集計結果</v-tab
+                      >
+                  </v-tabs>
+              </div>
+
+              <v-tabs-items v-model="modeTab" style="height: 100%">
+                <v-tab-item>
+                    <h4 v-if="!data.submissionMap[data.effectiveUserEmailAddress]">表示するデータがありません。</h4>
+                    <div v-else>
+                        <v-card>
+                            <v-card-title>
+                                {{ data.submissionMap[data.effectiveUserEmailAddress].courseWorkTitle }}
+                                <!--{{data.submission.state==="TURNED_IN"?"提出済み":"未提出"}}-->
+                            </v-card-title>
+                            <v-card-subtitle>
+                                <div>
+                                「{{ data.submissionMap[data.effectiveUserEmailAddress].courseName }}」における課題
+                                </div>
+                                <div>
+                                作成：{{ new Date(data.submissionMap[data.effectiveUserEmailAddress].createdAt).toLocaleString() }}
+                                -
+                                更新：{{ new Date(data.submissionMap[data.effectiveUserEmailAddress].updatedAt).toLocaleString() }}
+                                </div>
+                            </v-card-subtitle>
+                            <v-card-text>
+                                <ul>
+                                    <li>添付ファイル名：{{ data.submissionMap[data.effectiveUserEmailAddress].values[0] }}</li>
+                                    <li>添付ファイルのURL：<a target="_blank" :href="data.submissionMap[data.effectiveUserEmailAddress].values[1]">{{ data.submissionMap[data.effectiveUserEmailAddress].values[1] }}</a></li>
+                                </ul>
+                            </v-card-text>
+                        </v-card>
+                    </div>
+
+
+                </v-tab-item>
+
+                <v-tab-item style="height: 100%; display: flex; flex-wrap: nowrap; flex-direction: column; justify-content: start">
+
+                    <h4 v-if="! data.reviews || data.reviews.length === 0"
+                    >評価を行う必要はありません。</h4>
+
+                    <v-container
+                            v-else
+                            style="height: 100%"
+                            no-gutters>
+                        <v-row style="height: 100%; display: flex; flex-wrap: nowrap; flex-direction: row; justify-content: start; ">
+                            <v-col style="flex: 1; flex-grow: 0; flex-basis: 250px; overflow-y: scroll">
+                                <v-tabs
+                                        vertical
+                                        v-model="revieweeTab"
+
+                                >
+
+                                    <v-tab
+                                            v-for="review in data.reviews"
+                                            v-bind:key="review.reviewer.hashDigest+' '+review.reviewee.hashDigest"
+                                            　style="text-transform: none"
+                                    >
+                                        <div
+                                                v-for="(photoUrl, index) in review.reviewee.photoUrl.split('\t')"
+                                                style="
+                            display: flex;
+                            justify-direction: row;
+                            justify-content: flex-start;
+                            align-items: start;
+                          "
+                                        >
+                                            <v-avatar size="24" left>
+                                                <img
+                                                        :alt="review.reviewee.fullName.split('\t')[index]"
+                                                        :src="photoUrl"
+                                                />
+                                            </v-avatar>
+                                            <div style="margin-left: 5px">
+                          <span style="font-size: 100%"
+                          >{{review.reviewee.fullName}}</span
+                          ><br />
+                                                <span style="font-size: 33%"
+                                                >({{review.reviewee.emailAddress}})</span
+                                                >
+                                            </div>
+                                        </div>
+                                        <v-icon :style="`opacity: ${review.reviewee.done?1:0}`">mdi-check</v-icon>
+
+                                    </v-tab>
+                                </v-tabs>
+
+                            </v-col>
+                            <v-col style="flex: 1; flex-grow: 1; flex-basis: calc(100% - 250px); overflow-y: scroll">
+                                <v-tabs-items
+                                        v-model="revieweeTab"
+                                        vertical
+                                >
+                                    <v-tab-item
+                                            v-for="(review, reviewIndex) in data.reviews"
+                                            v-bind:key="review.reviewer.index+' '+review.reviewee.index"
+                                    >
+                                        <v-card>
+                                            <v-card-title>
+                                                <h3>
+                                                    <div
+                                                            style="display: flex; justify-content: flex-start;"
+                                                            v-for="(photoUrl, index) in review.reviewee.photoUrl.split('\t')"
+                                                    >
+                                                        <v-avatar>
+                                                            <img
+                                                                    :alt="review.reviewee.fullName.split('\t')[index]"
+                                                                    :src="photoUrl"
+                                                            />
+                                                        </v-avatar>
+                                                        <div>
+                                                            {{review.reviewee.fullName}}
+                                                            ({{review.reviewee.emailAddress}})
+                                                        </div>
+                                                    </div>
+                                                </h3>
+                                            </v-card-title>
+                                            <v-card-subtitle>
+                                                [{{review.reviewee.hashDigest}}]
+                                            </v-card-subtitle>
+
+
+                                            <v-card-text>
+
+                                                <v-card>
+                                                    <v-card-title>
+                                                        {{data.submissionMap[review.reviewee.emailAddress].courseWorkTitle}}
+                                                        <!--{{data.submission.state==="TURNED_IN"?"提出済み":"未提出"}}-->
+                                                    </v-card-title>
+                                                    <v-card-subtitle>
+                                                        <div>
+                                                            「{{data.submissionMap[review.reviewee.emailAddress].courseName}}」における課題
+                                                        </div>
+                                                        <div>
+                                                            作成：{{new Date(data.submissionMap[review.reviewee.emailAddress].createdAt).toLocaleString()}}
+                                                            -
+                                                            更新：{{new Date(data.submissionMap[review.reviewee.emailAddress].updatedAt).toLocaleString()}}
+                                                        </div>
+                                                    </v-card-subtitle>
+                                                    <v-card-text>
+                                                        <ul>
+                                                            <li>添付ファイル名：{{data.submissionMap[review.reviewee.emailAddress].values[0]}}</li>
+                                                            <li>添付ファイルのURL：<a target="_blank" :href="data.submissionMap[review.reviewee.emailAddress].values[1]">{{data.submissionMap[review.reviewee.emailAddress].values[1]}}</a></li>
+                                                        </ul>
+                                                    </v-card-text>
+                                                </v-card>
+
+                                                <div>
+                                                    <survey :survey="review.reviewee.surveyModel"></survey>
+                                                </div>
+
+                                            </v-card-text>
+                                        </v-card>
+                                    </v-tab-item>
+                                </v-tabs-items>
+                            </v-col>
+                        </v-row>
+                    </v-container>
+
+
+                </v-tab-item>
+
+                <v-tab-item>
+                    <h4 v-if="! data.reports || data.reports.length === 0">表示するデータがありません。</h4>
+                    <div v-else>
+                        <v-card v-for="(report, index) in data.reports" v-bind:key="report.index">
+                            {{JSON.stringify(report)}}
+                        </v-card>
+                    </div>
+                </v-tab-item>
+
+                <v-tab-item>
+
+                    <h4 v-if="! data.stats">表示するデータがありません。</h4>
+                    <div v-else>
+                        {{JSON.stringify(data.stats)}}
+                    </div>
+
+
+                </v-tab-item>
+              </v-tabs-items>
+
+          </div>
+        </v-main>
+      </v-app>
+    </div>
+    <?!= HtmlService.createHtmlOutputFromFile('reviewScript').getContent(); ?>
+  </body>
+</html>

@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <base target="_blank">
+    <script>
+        var jumpTo = "<?!= url ?>";
+        var winRef = window.open(jumpTo);
+        winRef ? google.script.host.close() : window.alert('Allow popup to redirect you to '+jumpTo) ;
+        window.onload=function(){document.getElementById('url').href = jumpTo;}
+    </script>
+</head>
+<body>
+<p><a id='url'>Click here </a>to open url <?!= url ?> </p>
+</body>
+</html>
