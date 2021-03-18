@@ -1,7 +1,7 @@
 import {FormObject} from './types';
 import {getCreatedAtUpdatedAtValues} from '../driveFileUtil';
 import formToJson from './formToJson';
-import {getSheetByUrl} from '../sheetUtil';
+import {openSheetByUrl} from '../sheetUtil';
 import sheetToJson from './sheetToJson';
 
 export function getFormSrc(formSrcType: string, formSrcUrl: string) {
@@ -19,7 +19,7 @@ export function getFormSrc(formSrcType: string, formSrcUrl: string) {
     }
   } else if (formSrcType === 'spreadsheet') {
     const ss = SpreadsheetApp.openByUrl(formSrcUrl);
-    const sheet = getSheetByUrl(formSrcUrl) || SpreadsheetApp.getActiveSheet();
+    const sheet = openSheetByUrl(formSrcUrl) || SpreadsheetApp.getActiveSheet();
     const {createdAt, updatedAt} = getCreatedAtUpdatedAtValues(ss.getId());
     if (!formSrc || formSrc.metadata.updatedAt !== updatedAt) {
       formSrc = sheetToJson(sheet, createdAt, updatedAt)

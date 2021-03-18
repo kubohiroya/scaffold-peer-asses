@@ -21,14 +21,13 @@ export function jsonToSurveyJs(formSrc: FormObject){
     if(item.type === "surveyJs:matrix") {
       return {
         ...item,
-        // name: item.name, // `item${itemSerialNum++}`,
         type: 'matrix'
       };
     }else if(item.type === "checkbox"){
       const itemObject = (item as CheckboxItemObject);
       return {
         type: "checkbox",
-        name: itemObject.title, // item${itemSerialNum++}`,
+        name: itemObject.title,
         title: itemObject.title,
         tooltip: itemObject.helpText,
         isRequired: itemObject.isRequired,
@@ -42,7 +41,7 @@ export function jsonToSurveyJs(formSrc: FormObject){
       const itemObject = (item as DateItemObject);
       return {
         "type": "datepicker",
-        name: itemObject.title, // `item${itemSerialNum++}`,
+        name: itemObject.title,
         title: itemObject.title,
         tooltip: itemObject.helpText,
         "inputType": "date",
@@ -53,7 +52,7 @@ export function jsonToSurveyJs(formSrc: FormObject){
       const itemObject = (item as DateItemObject);
       return {
         "type": "datepicker",
-        name: itemObject.title, // `item${itemSerialNum++}`,
+        name: itemObject.title,
         title: itemObject.title,
         tooltip: itemObject.helpText,
         "inputType": "datetime",
@@ -68,7 +67,7 @@ export function jsonToSurveyJs(formSrc: FormObject){
       const itemObject = (item as GridItemObject);
       return {
         type: "matrix",
-        name: itemObject.title, // `item${itemSerialNum++}`,
+        name: itemObject.title,
         title: itemObject.title,
         tooltip: itemObject.helpText,
         isRequired: itemObject.isRequired,
@@ -82,7 +81,7 @@ export function jsonToSurveyJs(formSrc: FormObject){
       const itemObject = (item as ListItemObject);
       return {
         type: "dropdown",
-        name: itemObject.title, // `item${itemSerialNum++}`,
+        name: itemObject.title,
         title: itemObject.title,
         tooltip: itemObject.helpText,
         isRequired: itemObject.isRequired,
@@ -93,7 +92,7 @@ export function jsonToSurveyJs(formSrc: FormObject){
       const itemObject = (item as MultipleChoiceItemObject);
       return {
         type: "radiogroup",
-        name: itemObject.title, // `item${itemSerialNum++}`,
+        name: itemObject.title,
         title: itemObject.title,
         tooltip: itemObject.helpText,
         isRequired: itemObject.isRequired,
@@ -104,7 +103,7 @@ export function jsonToSurveyJs(formSrc: FormObject){
       const itemObject = (item as ParagraphTextItemObject);
       return {
         type: "comment",
-        name: itemObject.title, // `item${itemSerialNum++}`,
+        name: itemObject.title,
         title: itemObject.title,
         tooltip: itemObject.helpText,
         isRequired: itemObject.isRequired,
@@ -117,7 +116,7 @@ export function jsonToSurveyJs(formSrc: FormObject){
       const itemObject = (item as SectionHeaderItemObject);
       return {
         type: 'html',
-        name: itemObject.title, // `item${itemSerialNum++}`,
+        name: itemObject.title,
         tooltip: itemObject.helpText,
         html: `<h3>${itemObject.title}</h3><h4>${itemObject.helpText}</h4>`
       };
@@ -125,7 +124,7 @@ export function jsonToSurveyJs(formSrc: FormObject){
       const itemObject = (item as TextItemObject);
       return {
         type: "text",
-        name: itemObject.title, // `item${itemSerialNum++}`,
+        name: itemObject.title,
         title: itemObject.title,
         tooltip: itemObject.helpText,
         isRequired: itemObject.isRequired,
@@ -139,11 +138,7 @@ export function jsonToSurveyJs(formSrc: FormObject){
 
   const pages = [createPage(1)];
 
-  //Logger.log(JSON.stringify(formSrc.items, null, ' '));
-
   formSrc.items.forEach((item, index)=>{
-
-    //Logger.log(index);
 
     if(item.type === "pageBreak"){
       const itemObject = (item as PageBreakItemObject);
@@ -152,7 +147,7 @@ export function jsonToSurveyJs(formSrc: FormObject){
       });
       page.elements.push({
         type: 'html',
-        name: itemObject.title, // `item${itemSerialNum++}`,
+        name: itemObject.title,
         html: `<p>${itemObject.helpText}</p>`
       })
       pages.push(page);
@@ -164,8 +159,6 @@ export function jsonToSurveyJs(formSrc: FormObject){
       }
     }
   });
-
-  // Logger.log(JSON.stringify(pages, null, ' '));
 
   return {
     title: formSrc.metadata.title,

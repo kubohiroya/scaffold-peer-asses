@@ -46,38 +46,46 @@ export function onOpen() {
       "previewForm"
     )
 
-  const templateSubMenu = ui
-    .createMenu("E. 評価")
+  const groupingSubMenu = ui.createMenu("E. グループ分け")
+    .addItem("1. グループ定義(group:コース名)をランダムに作成", "startCreateGroup");
+
+  const reviewConfigSubMenu = ui
+    .createMenu("F. 評価")
     .addSubMenu(ui.createMenu("1-a.「提出物一覧(submissions:)」からの個人評価")
       .addItem(
-        "1.評価フォーム雛形を選択・新規スプレッドシート(config:)作成・評価を準備",
+        "1. 評価フォーム雛形を選択して新規の設定を開始",
         "startConfigWithSubmissionsWithPicker")
       .addItem(
-        "2.評価フォーム雛形をURL指定・新規スプレッドシート(config:)を作成・評価を準備",
+        "2. 評価フォーム雛形をURL指定して新規の設定を開始",
         "startConfigWithSubmissionsWithInputBox")
     )
     .addSubMenu(ui.createMenu("1-b.「提出物一覧(submissions:)」からのグループ評価")
-      .addItem("1.「グループ一覧(groups:)」と評価フォーム雛形を選択・新規スプレッドシート(config:)を作成・評価を準備",
-        "startConfigWithCustomSheetWithPicker")
-      .addItem("2.「グループ一覧(groups:)」と評価フォーム雛形URLを指定・新規スプレッドシート(config:)を作成・評価を準備",
-        "startConfigWithDialogWithCustomSheetWithInputBox"))
+      .addItem("1.「グループ定義(groups:)」と評価フォーム雛形を選択して新規の設定を開始",
+        "startConfigWithGroupSubmissionsWithPicker")
+      .addItem("2.「グループ定義(groups:)」と評価フォーム雛形URLを指定して新規の設定を開始",
+        "startConfigWithGroupSubmissionsWithInputBox"))
     .addSeparator()
     .addItem(
-      "2. 現在のスプレッドシート(config:)を開いて評価の準備を再開",
+      "2. 設定シート(config:)をもとに評価の準備を再開",
       "continueConfig"
     )
     .addSeparator()
     .addItem(
-      "3. 現在のスプレッドシート(config:)を用いて評価フォームを開く",
+      "3. 設定シート(config:)をもとに評価フォームを開く",
       "openReviewPage"
     )
     .addItem(
-      "4. 現在のスプレッドシート(config:)を用いて評価結果シートを開く",
+      "4. 設定シート(config:)をもとに評価結果シートを開く",
       "openResultSheet"
+    )
+    .addItem(
+      "5. 設定シート(config:)をもとに集計結果シートを開く",
+      "openSummarySheet"
     );
 
+
   const notifySubMenu = ui
-    .createMenu("F. 通知")
+    .createMenu("G. 通知")
     .addItem("1-a. 評価者への通知", "notifyToReviewers")
     .addItem("1-b. 評価者へのリマインド", "remindToReviewers")
     .addItem("2. 被評価者への通知", "notifyToReviewees");
@@ -89,7 +97,9 @@ export function onOpen() {
     .addSubMenu(importFormSubMenu)
     .addSubMenu(exportFormSubMenu)
     .addSeparator()
-    .addSubMenu(templateSubMenu)
+    .addSubMenu(groupingSubMenu)
+    .addSeparator()
+    .addSubMenu(reviewConfigSubMenu)
     .addSeparator()
     .addSubMenu(notifySubMenu)
     .addToUi();

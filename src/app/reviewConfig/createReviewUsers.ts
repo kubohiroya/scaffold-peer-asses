@@ -7,7 +7,7 @@ import {
   listTeacherProfiles, regulatePhotoUrl
 } from '../classroom/importClassroom';
 import {ReviewUser} from './ReviewUser';
-import {getSheetByUrl} from '../sheetUtil';
+import {openSheetByUrl} from '../sheetUtil';
 import {RevieweeUserGroup} from './RevieweeUserGroup';
 import UserProfile = GoogleAppsScript.Classroom.Schema.UserProfile;
 import md5 from 'md5';
@@ -45,7 +45,7 @@ export function createReviewees(config: ReviewConfig): Array<ReviewUser|Reviewee
 }
 
 function getReviewUsersFromSpreadsheet(config: ReviewConfig, url: string, nonce: string): Array<ReviewUser>{
-  const sheet = getSheetByUrl(url);
+  const sheet = openSheetByUrl(url);
   const sheetName = sheet.getSheetName();
   const values = sheet.getDataRange().getValues();
   return values.map((row, index)=>createReviewUser(
@@ -136,3 +136,13 @@ export function createReviewUser(params: {index: number, fullName: string, email
 export function createHashDigest(index: number, nonce: string){
   return md5(nonce+"@"+index).toString()
 }
+
+export function getUser(courseId: string, userId: string){
+  return Classroom.Courses.Students.get(courseId, userId) || Classroom.Courses.Teachers.get(courseId, userId);
+}
+
+export function reviewUserToArray(user: ReviewUser){
+  return [user.index+1, user.emailAddress, user.fullName, user.photoUrl, user.hashDigest];
+}
+
+

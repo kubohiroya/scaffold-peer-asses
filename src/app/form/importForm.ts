@@ -4,16 +4,11 @@ import getMessages from "./messages";
 import Form = GoogleAppsScript.Forms.Form;
 import Sheet = GoogleAppsScript.Spreadsheet.Sheet;
 import {getCreatedAtUpdatedAtValues} from '../driveFileUtil';
-import {showPicker} from '../picker/picker';
+import {startFormPicker} from '../execute';
 const uiMessages = getMessages(Session.getActiveUserLocale())["ui"];
 
 export function importFormWithPicker(): void {
-  // const apiKey = process.env.PICKER_API_KEY;
-  // if(apiKey) showFormPickerDialog(apiKey);
-  showPicker('フォームを選択...',  [
-    'application/vnd.google-apps.form',
-    'application/vnd.google-apps.spreadsheet'
-  ], 'onFormItemImported');
+  startFormPicker();
 }
 
 export function importFormWithDialog(): void {

@@ -3676,6 +3676,15 @@ html-minifier-terser@^5.0.1, html-minifier-terser@^5.1.1:
     relateurl "^0.2.7"
     terser "^4.6.3"
 
+html-webpack-inline-source-plugin@^0.0.10:
+  version "0.0.10"
+  resolved "https://registry.yarnpkg.com/html-webpack-inline-source-plugin/-/html-webpack-inline-source-plugin-0.0.10.tgz#89bd5f761e4f16902aa76a44476eb52831c9f7f0"
+  integrity sha512-0ZNU57u7283vrXSF5a4VDnVOMWiSwypKIp1z/XfXWoVHLA1r3Xmyxx5+Lz+mnthz/UvxL1OAf41w5UIF68Jngw==
+  dependencies:
+    escape-string-regexp "^1.0.5"
+    slash "^1.0.0"
+    source-map-url "^0.4.0"
+
 html-webpack-plugin@^5.3.0:
   version "5.3.0"
   resolved "https://registry.yarnpkg.com/html-webpack-plugin/-/html-webpack-plugin-5.3.0.tgz#9d93a547db34ac1f28b9f41fd8fe38a5d56770f3"
@@ -5822,7 +5831,7 @@ request-promise-native@^1.0.8:
     stealthy-require "^1.1.1"
     tough-cookie "^2.3.3"
 
-request@^2.88.2:
+request@^2.85.0, request@^2.88.2:
   version "2.88.2"
   resolved "https://registry.yarnpkg.com/request/-/request-2.88.2.tgz#d73c918731cb5a87da047e207234146f664d12b3"
   integrity sha512-MsvtOrfG9ZcrOwAW+Qi+F6HbD0CWXEh9ou77uOb7FM2WPhwT7smM833PzanhJLsgXjN89Ir6V2PczXNnMpwKhw==
@@ -6181,6 +6190,11 @@ sisteransi@^1.0.5:
   resolved "https://registry.yarnpkg.com/sisteransi/-/sisteransi-1.0.5.tgz#134d681297756437cc05ca01370d3a7a571075ed"
   integrity sha512-bLGGlR1QxBcynn2d5YmDX4MGjlZvy2MRBDRNHLJ8VI6l6+9FUiyTFNJ0IveOSP0bcXgVDPRcfGqA0pjaqUpfVg==
 
+slash@^1.0.0:
+  version "1.0.0"
+  resolved "https://registry.yarnpkg.com/slash/-/slash-1.0.0.tgz#c41f2f6c39fc16d1cd17ad4b5d896114ae470d55"
+  integrity sha1-xB8vbDn8FtHNF61LXYlhFK5HDVU=
+
 slash@^3.0.0:
   version "3.0.0"
   resolved "https://registry.yarnpkg.com/slash/-/slash-3.0.0.tgz#6539be870c165adbd5240220dbe361f1bc4d4634"
@@ -6350,6 +6364,19 @@ sprintf-js@~1.0.2:
   version "1.0.3"
   resolved "https://registry.yarnpkg.com/sprintf-js/-/sprintf-js-1.0.3.tgz#04e6926f662895354f3dd015203633b857297e2c"
   integrity sha1-BOaSb2YolTVPPdAVIDYzuFcpfiw=
+
+sri-create@^0.0.3:
+  version "0.0.3"
+  resolved "https://registry.yarnpkg.com/sri-create/-/sri-create-0.0.3.tgz#35ba419e6d9381299615cd164c96d09b1e0e2128"
+  integrity sha512-4ZL3TLvPvu0y/3YpTkZdd441ykiRnrdWJuvus99WIT7NWTS2Dl/dFdZ7j0+zuL8cZPAKG2qGSdB+OLTBMRNuyQ==
+  dependencies:
+    request "^2.85.0"
+    sri "^1.1.0"
+
+sri@^1.1.0:
+  version "1.1.0"
+  resolved "https://registry.yarnpkg.com/sri/-/sri-1.1.0.tgz#0b5cf64620e490b95fd805b0c710d7669c53cdfe"
+  integrity sha1-C1z2RiDkkLlf2AWwxxDXZpxTzf4=
 
 sshpk@^1.7.0:
   version "1.16.1"
@@ -6993,6 +7020,13 @@ webidl-conversions@^6.1.0:
   version "6.1.0"
   resolved "https://registry.yarnpkg.com/webidl-conversions/-/webidl-conversions-6.1.0.tgz#9111b4d7ea80acd40f5270d666621afa78b69514"
   integrity sha512-qBIvFLGiBpLjfwmYAaHPXsn+ho5xZnGvyGvsarywGNc8VyQJUMHJ8OBKGGrPER0okBeMDaan4mNBlgBROxuI8w==
+
+webpack-cdn-plugin@^3.3.1:
+  version "3.3.1"
+  resolved "https://registry.yarnpkg.com/webpack-cdn-plugin/-/webpack-cdn-plugin-3.3.1.tgz#7e08855ab3fc0af6859f0b49620dc81f58914e23"
+  integrity sha512-xwhQ6xstFbPlgEkKNAOjXs/6YkPdzYeXl9na+CSBF7p1L88PZIGgL++vel4oiAnp+WTud7fhnSjlB79U6aN28w==
+  dependencies:
+    sri-create "^0.0.3"
 
 webpack-cli@^4.5.0:
   version "4.5.0"

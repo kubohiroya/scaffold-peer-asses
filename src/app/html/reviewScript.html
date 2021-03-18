@@ -15,6 +15,7 @@
             return {
                 modeTab: [],
                 revieweeTab: null,
+                reviewerTab: null,
                 initializing: true,
                 data: {
                     availableModes: [],
@@ -27,33 +28,56 @@
                     surveyJs: {},
 
                     submissionMap: null,
-                    reviewRequests: [],
-                    reviewArticles: [],
+                    reviewRequestsOfReviewer: [],
+                    reviewArticlesOfReviewer: {},
+                    reviewArticlesForReviewee: {},
                     summary: null,
                 },
             };
         },
         methods: {
-            initializeData: function(initData){
+            initializeData: function(data){
+                // console.log("initializeData "+JSON.stringify(data, null, " "));
                 this.initializing = false;
-                this.data = {...initData};
+                this.data = {...data};
                 const reviewerEmailAddress = this.data.effectiveUserEmailAddress;
                 const surveyJs = this.data.surveyJs;
+                // console.log(JSON.stringify(data, null, ' '));
+                const reviewArticlesOfReviewer = this.data.reviewArticlesOfReviewer;
+                const reviewArticlesForReviewee = this.data.reviewArticlesForReviewee;
+
                 this.data.reviewRequests.map(review=>review.reviewee).forEach(function(reviewee){
                     const revieweeEmailAddress = reviewee.emailAddress;
                     const surveyModel = new Survey.Model(surveyJs);
                     surveyModel.onComplete.add(function(sender){
-                        console.log(reviewerEmailAddress, revieweeEmailAddress, JSON.stringify(sender.data));
-                        Vue.set(reviewee, "done", true);
-
-                    } )
+                        google.script.run.withFailureHandler(this.showError).submitReviewArticle(gid, reviewerEmailAddress, revieweeEmailAddress, sender.data);
+                        Vue.set(reviewee, "timestamp", new Date().getTime());
+                    })
+                    if(reviewArticlesOfReviewer[revieweeEmailAddress] && reviewArticlesOfReviewer[revieweeEmailAddress].data){
+                        const review = reviewArticlesOfReviewer[revieweeEmailAddress];
+                        surveyModel.data = review.data;
+                        Vue.set(reviewee, "timestamp", review.timestamp);
+                    }
                     Vue.set(reviewee, "surveyModel", surveyModel);
+                });
+                Object.keys(reviewArticlesForReviewee).map(key=>reviewArticlesForReviewee[key].reviewer).forEach(function(reviewer){
+                    const reviewerEmailAddress = reviewer.emailAddress;
+                    const surveyModel = new Survey.Model(surveyJs);
+                    const review = reviewArticlesForReviewee[reviewerEmailAddress];
+                    surveyModel.data = review.data;
+                    surveyModel.mode = 'display';
+                    Vue.set(reviewer, "timestamp", review.timestamp);
+                    Vue.set(reviewer, "surveyModel", surveyModel);
+                    // console.log(reviewerEmailAddress, JSON.stringify(review));
                 });
             },
             switchUser: function(){
                 this.initializing = true;
                 google.script.run.withSuccessHandler(this.initializeData).initializeReviewPage(gid, this.data.effectiveUserEmailAddress);
             },
+            showError: function(message){
+                alert(emssage);
+            }
         },
         created: function(){
             const userEmailAddress = null;

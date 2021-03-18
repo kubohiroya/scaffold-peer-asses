@@ -85,6 +85,7 @@ export interface SurveyJsMatrixItemObject{
   columns: Array<string>,
   rows: Array<{value: string, text: string}>;
   cells: {[rowName: string]: {[columnName: string]: string}},
+  points: {[rowName: string]: {[columnName: string]: number}},
   _cellIndex: number,
 }
 

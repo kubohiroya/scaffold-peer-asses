@@ -184,6 +184,7 @@ const createFormItemObject = (
           columns: new Array<string>(),
           rows: new Array<{value:string, text:string}>(),
           cells: {} as {[rowName: string]: {[columnName: string]: string}},
+          points: {} as {[rowName: string]: {[columnName: string]: number}},
           _cellIndex: 0
         };
         itemObjects.push({...itemObject, title: itemObject.name, helpText: ''});
@@ -198,11 +199,13 @@ const createFormItemObject = (
         const value = `${item.name} [${(row[2] as string || row[1] as string)}]`;
         item.rows.push({text:text, value:value});
         item.cells[value] = {};
+        item.points[value] = {};
       }else if(type === "surveyJs:matrix.cell"){
         const item = itemObjects[itemObjects.length - 1] as unknown as SurveyJsMatrixItemObject;
         const matrixRowIndex = Math.floor(item._cellIndex / item.columns.length);
         const matrixColumnIndex = item._cellIndex % item.columns.length;
         item.cells[item.rows[matrixRowIndex].value][item.columns[matrixColumnIndex]] = row[1] as string;
+        item.points[item.rows[matrixRowIndex].value][item.columns[matrixColumnIndex]] = parseInt(row[2] as string);
         item._cellIndex++;
       }
     } else {

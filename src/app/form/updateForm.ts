@@ -2,7 +2,7 @@ import getMessages from "./messages";
 import sheetToJson from "./sheetToJson";
 import { jsonToForm } from "./jsonToForm";
 import {getCreatedAtUpdatedAtValues} from '../driveFileUtil';
-import {openURL} from '../openURL';
+import {openUrl} from '../openUrl';
 const uiMessages = getMessages(Session.getActiveUserLocale())["ui"];
 
 
@@ -40,7 +40,7 @@ export function exportFormWithDialog() {
     form.setTitle(title);
     file.setName(title);
 
-    openURL('Please wait to open the form page...', form.getPublishedUrl());
+    openUrl('Please wait to open the form page...', form.getPublishedUrl());
 
   } catch (exception) {
     Logger.log(exception);

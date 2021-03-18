@@ -15,6 +15,7 @@
                 submitting: false,
                 loadingReviewPage: false,
                 loadingResultSheet: false,
+                loadingSummarySheet: false,
                 config: {
                     courseId: '',
                     courseName:'',
@@ -29,7 +30,7 @@
                     reviewerSrcSpreadsheetUrl: '',
                     revieweeSrcType: '',
                     binding: '',
-                    numReviewRequired: null,
+                    numReviewRequired: 0,
                     reviewThemselves: false,
                     anonymousReviewee: false,
                     anonymousReviewer: false,
@@ -100,7 +101,19 @@
                 }).withFailureHandler(function(){
                     setLoadingResultSheet(false);
                 }).openResultSheet(this.config.resultUrl);
+            },
+            openSummarySheet: function(){
+                const setLoadingSummarySheet = (loadingSummarySheet)=>{
+                    this.loadingSummarySheet = loadingSummarySheet;
+                }
+                setLoadingSummarySheet(true);
+                google.script.run.withSuccessHandler(function(){
+                    setLoadingSummarySheet(false);
+                }).withFailureHandler(function(){
+                    setLoadingSummarySheet(false);
+                }).openSummarySheet(this.config.summaryUrl);
             }
+
         },
         created: function(){
             google.script.run.withSuccessHandler(this.initializeData).initializeReviewConfig();

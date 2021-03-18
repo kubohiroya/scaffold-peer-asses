@@ -239,17 +239,19 @@
                         required
                       >
                         <v-radio
-                          label="1:N  教師(オーナー)が全員を評価"
+                          label="1:N  教師(オーナー)が被評価者全員を評価"
                           value="all"
                           :disabled="config.reviewerSrcType!=='owner'"
                         ></v-radio>
                         <v-radio
                           label="N:N  評価者全員が被評価者全員を評価"
                           value="full"
+                          :disabled="config.reviewerSrcType==='owner'"
                         ></v-radio>
                         <v-radio
                           label="x:x 手動設定した割り振りで評価"
                           value="manual"
+                          :disabled="config.reviewerSrcType==='owner'"
                         ></v-radio>
                         <v-radio
                           label="n:n ランダムな割り振りで評価"
@@ -269,7 +271,7 @@
                         rounded
                         type="number"
                         min="1"
-                        :disabled="config.binding!=='random' && config.binding!=='manual'"
+                        :disabled="config.binding !== 'random'"
                         v-model.number="config.numReviewRequired"
                       ></v-text-field>
                     </v-row>
@@ -277,7 +279,7 @@
                       <v-checkbox
                         hide-details
                         label="自己評価を追加する(+1)"
-                        :disabled="config.binding!=='random'&&config.binding!=='manual'"
+                        :disabled="config.binding !== 'random'"
                         v-model="config.reviewThemselves"
                       ></v-checkbox>
                     </v-row>
@@ -288,6 +290,7 @@
                       <v-switch
                         label="現在の割り振りを破棄して割り振りをやり直す"
                         v-model="config.overwriteBindings"
+                        :disabled="config.actionUrl==='' || config.actionUrl===undefined"
                       >
                       </v-switch>
                     </v-row>
@@ -298,8 +301,10 @@
                   class="ma-10 text-center"
                   color="primary"
                   large
-                  :disabled="config.courseId === '' || config.reviewerSrcType === '' || (config.reviewerSrcType === 'spreadsheet' && config.reviewerSrcSpreadsheetUrl === '') ||
-                  config.revieweeSrcType === '' || config.binding === '' ||(config.binding === 'random' && config.numReviewRequired === 0 )"
+                  :disabled="!(config.courseId !== '' && config.courseWorkId != '' && config.submissionsUrl != '' && config.formSrcType != '' && config.formSrcUrl != '' &&
+                  config.reviewerSrcType && config.reviewerSrcType !== '' && (config.reviewerSrcType !== 'spreadsheet' || (config.reviewerSrcType === 'spreadsheet' && config.reviewerSrcSpreadsheetUrl !== '')) &&
+                  config.revieweeSrcType && config.revieweeSrcType !== '' &&
+                  config.binding && config.binding !== '' && (config.binding !== 'random' || (config.binding === 'random' && config.numReviewRequired >= 0 )))"
                   :loading="submitting"
                   @click="submitReviewConfig"
                 >
@@ -372,17 +377,29 @@
               <h3><v-icon>mdi-google-spreadsheet</v-icon>&nbsp; 評価結果</h3>
               <v-container class="mx-3" style="width: 250px" dense>
                 <v-row>
-                  <v-btn
-                    class="ma-3 text-center"
-                    :disabled="config.actionUrl==='' || config.actionUrl===undefined"
-                    :loading="loadingResultSheet"
-                    :color="config.acceptingResponses? 'red':'secondary'"
-                    large
-                    @click="openResultSheet"
-                  >
-                    評価結果シートを開く
-                    <v-icon right>mdi-open-in-new</v-icon>
-                  </v-btn>
+                    <v-btn
+                            class="ma-3 text-center"
+                            :disabled="config.resultUrl==='' || config.resultUrl===undefined"
+                            :loading="loadingResultSheet"
+                            :color="config.acceptingResponses? '#f8f':'secondary'"
+                            large
+                            @click="openResultSheet"
+                    >
+                        評価結果シートを開く
+                        <v-icon right>mdi-open-in-new</v-icon>
+                    </v-btn>
+
+                    <v-btn
+                            class="ma-3 text-center"
+                            :disabled="config.summaryUrl==='' || config.summaryUrl===undefined"
+                            :loading="config.loadingSummarySheet"
+                            :color="config.acceptingResponses? 'skyblue':'secondary'"
+                            large
+                            @click="openSummarySheet"
+                    >
+                        集計シートを開く
+                        <v-icon right>mdi-open-in-new</v-icon>
+                    </v-btn>
                 </v-row>
               </v-container>
             </v-tab-item>

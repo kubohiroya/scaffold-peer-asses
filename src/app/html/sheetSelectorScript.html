@@ -1,0 +1,49 @@
+<script src="https://cdn.jsdelivr.net/npm/vue@2.6.12/dist/vue.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/vuetify@2.x/dist/vuetify.js"></script>
+<link
+        href="https://fonts.googleapis.com/css?family=Roboto:100,300,400,500,700,900"
+        rel="stylesheet"
+/>
+<link
+        href="https://cdn.jsdelivr.net/npm/@mdi/font@4.x/css/materialdesignicons.min.css"
+        rel="stylesheet"
+/>
+<link
+        href="https://cdn.jsdelivr.net/npm/vuetify@2.x/dist/vuetify.min.css"
+        rel="stylesheet"
+/>
+<meta
+        name="viewport"
+        content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, minimal-ui"
+/>
+
+<script>
+    const app = new Vue({
+        el: "#app",
+        vuetify: new Vuetify(),
+        data: function () {
+            return {
+                initializing: true,
+                spreadsheetName: '',
+                sheets: [],
+                sheetId: null,
+                message: 'Please wait...',
+            };
+        },
+        methods: {
+            showMessage(errorMessage) {
+                this.errorMessage = errorMessage;
+            },
+            submit(){
+                google.script.host.close();
+            }
+        },
+        created: function () {
+            function showError(message){
+                alert(message);
+            }
+
+        },
+    });
+
+</script>
